@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="5dp"
+    android:background="#FFD600"
+    tools:context=".TambahKomplainSPPTActivity"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:showIn="@layout/app_bar_tambah_sppt">
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical"
+            android:paddingTop="5dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:padding="10dp"
+                android:background="#FFFFFF"
+                android:elegantTextHeight="true"
+                android:lineSpacingExtra="2dp"
+                android:text="*Tambahkan berkas anda jika ada berkas yang ingin dikirim. Dokumen harus berformat docx (Microsoft Word Document)."
+                android:textStyle="italic"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/btnBerkas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/rounded_button4"
+                    android:text="Pilih Berkas"
+                    android:textSize="12sp"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:id="@+id/tvNamaFile"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:padding="10dp"
+                    android:background="#FFFFFF"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="dokumen-sppt"
+                    android:textStyle="italic"
+                    android:visibility="gone"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="20dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Nomor Daftar Komplain"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edNomor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Nomor Daftar Komplain"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"
+                    android:editable="false"
+                    android:focusable="false"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="10dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Nomor Induk Keluarga"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edNIK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Nomor Induk Keluarga"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"
+                    android:editable="false"
+                    android:focusable="false"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="10dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Nama"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edNama"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Nama"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="10dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Alamat"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edAlamat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Alamat"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="10dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Tanggal Kirim"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edTanggal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Tanggal Kirim"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"
+                    android:editable="false"
+                    android:focusable="false"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="10dp"
+                android:paddingTop="5dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:orientation="vertical"
+                android:background="#FFFFFF">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:text="Isi Komplain"
+                    android:textSize="12sp"/>
+                <EditText
+                    android:id="@+id/edIsi"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:hint="Isi komplain anda disini"
+                    android:inputType="textMultiLine"
+                    android:textSize="14sp"/>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/sendBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="6dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/rounded_button_cornerbottom"
+                android:text="Kirim Komplain"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
