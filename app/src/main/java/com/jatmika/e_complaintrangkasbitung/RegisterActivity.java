@@ -10,8 +10,11 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.animation.Animation;
@@ -41,13 +44,22 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
+import com.jatmika.e_complaintrangkasbitung.Model.Penduduk;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Calendar;
 
 import static android.text.TextUtils.isEmpty;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -56,9 +68,11 @@ public class RegisterActivity extends AppCompatActivity {
     Animation fromright;
 
     ImageView photo, chooseBtn, btnShow;
-    EditText edNik, edEmail, edPass, edNama, edTTL, edAlamat, edNohp;
+    EditText edNik, edEmail, edPass, edNohp;
+    TextView edNama, edTTL, edAlamat, tvjenkel;
     RadioButton radioPria, radioWanita;
     Button btnDaftar;
+    API apiService;
 
     Uri mImageUri;
     StorageReference mStorageRef;
@@ -71,6 +85,7 @@ public class RegisterActivity extends AppCompatActivity {
     DatePickerDialog.OnDateSetListener date;
 
     String jenkel;
+    String id_penduduk = "";
     String show = "SHOW";
 
     @Override
@@ -80,6 +95,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        apiService = APIUtility.getAPI();
 
         btnBack = findViewById(R.id.btnBack);
         tvJudul = findViewById(R.id.tvJudul);
@@ -90,30 +106,53 @@ public class RegisterActivity extends AppCompatActivity {
         edPass = findViewById(R.id.edPass);
         edNama = findViewById(R.id.edNama);
         edTTL = findViewById(R.id.edTTL);
-        radioPria = findViewById(R.id.radioPria);
-        radioWanita = findViewById(R.id.radioWanita);
         edAlamat = findViewById(R.id.edAlamat);
         edNohp = findViewById(R.id.edNohp);
         btnShow = findViewById(R.id.ic_toggle);
         btnDaftar = findViewById(R.id.btnDaftar);
+        tvjenkel = findViewById(R.id.tvJenkelReg);
 
         fromright = AnimationUtils.loadAnimation(this, R.anim.fromright);
         tvJudul.startAnimation(fromright);
 
-        radioPria.setOnClickListener(new View.OnClickListener() {
+        edNik.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                radioWanita.setChecked(false);
-                jenkel = "Pria";
-            }
-        });
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
-        radioWanita.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                radioPria.setChecked(false);
-                jenkel = "Wanita";
             }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                Log.i("ukuran", "ukuran"+s.length());
+                    if (s.length() >= 16){
+                        apiService.searchPenduduk(edNik.getText().toString()).enqueue(new Callback<Penduduk>() {
+                            @Override
+                            public void onResponse(Call<Penduduk> call, Response<Penduduk> response) {
+                                if(response.code() == 200){
+                                    edNama.setText(response.body().getNama_penduduk());
+                                    LocalDate ld = LocalDate.parse(response.body().getTanggal_lahir());
+                                    String ttl = ld.getDayOfMonth()+" "+ld.getMonth()+" "+ld.getYear();
+                                    edTTL.setText(ttl);
+                                    edAlamat.setText(response.body().getAlamat());
+                                    tvjenkel.setText(response.body().getJenis_kelamin());
+                                    id_penduduk = response.body().getId_penduduk().toString();
+                                }else{
+                                    Toast.makeText(RegisterActivity.this, "NIK tidak ditemukan! Harap menghubungi Admin", Toast.LENGTH_LONG).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Penduduk> call, Throwable t) {
+
+                            }
+                        });
+                    }
+                }
         });
 
         auth = FirebaseAuth.getInstance();
@@ -240,68 +279,31 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(RegisterActivity.this, "Password minimal harus 6 karakter", Toast.LENGTH_SHORT).show();
             mDialog.dismiss();
 
-        } else if (mImageUri == null){
-            Toast.makeText(RegisterActivity.this, "Photo harus ditambahkan!", Toast.LENGTH_SHORT).show();
-            mDialog.dismiss();
-
         } else if (isEmpty(edNama.getText().toString()) || isEmpty(edTTL.getText().toString())
                 || isEmpty(edAlamat.getText().toString()) || isEmpty(edNohp.getText().toString())){
             Toast.makeText(this, "Data harus dilengkapi!", Toast.LENGTH_SHORT).show();
             mDialog.dismiss();
-
-        } else if(mImageUri != null || !isEmpty(edNama.getText().toString()) || !isEmpty(edTTL.getText().toString())
-                || !isEmpty(edAlamat.getText().toString()) || !isEmpty(edNohp.getText().toString())){
-            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+        } else {
+            apiService.register(id_penduduk, email, edPass.getText().toString(), edNohp.getText().toString()).enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if(task.isSuccessful()){
-                        final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis()
-                                + "." + getFileExtension(mImageUri));
-
-                        mUploadTask = fileReference.putFile(mImageUri)
-                                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                        fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                            @Override
-                                            public void onSuccess(Uri uri) {
-                                                DataUser upload = new DataUser(uri.toString(), edNik.getText().toString(), edEmail.getText().toString(),
-                                                        edPass.getText().toString(), edNama.getText().toString(),
-                                                        edTTL.getText().toString(), jenkel, edAlamat.getText().toString(),
-                                                        edNohp.getText().toString());
-
-                                                String uploadId = mDatabaseRef.push().getKey();
-                                                mDatabaseRef.child(uploadId).setValue(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                    @Override
-                                                    public void onSuccess(Void aVoid) {
-                                                        Toast.makeText(RegisterActivity.this, "Berhasil daftar akun, silahkan login!", Toast.LENGTH_LONG).show();
-                                                        mDialog.dismiss();
-                                                        finish();
-                                                    }
-                                                });
-                                            }
-                                        });
-                                    }
-                                })
-                                .addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception e) {
-                                        Toast.makeText(RegisterActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                })
-                                .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                    @Override
-                                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                                    }
-                                });
-                    } else {
-                        Toast.makeText(RegisterActivity.this, "Email telah terdaftar!", Toast.LENGTH_LONG).show();
-                        mDialog.dismiss();
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    mDialog.dismiss();
+                    if(response.code() == 200){
+                        Toast.makeText(RegisterActivity.this, "User Berhasil dibuat, Silahkan login!", Toast.LENGTH_SHORT).show();
+                    }
+                    if(response.code() == 302){
+                        Toast.makeText(RegisterActivity.this, "NIK sudah terdaftar!", Toast.LENGTH_SHORT).show();
+                    }
+                    if(response.code() == 409){
+                        Toast.makeText(RegisterActivity.this, "Email sudah digunakan!", Toast.LENGTH_SHORT).show();
                     }
                 }
-            });
 
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
         }
     }
 }

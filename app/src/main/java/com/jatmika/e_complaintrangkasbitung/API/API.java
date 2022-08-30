@@ -57,5 +57,9 @@ public interface API {
     Call<ResponseBody> addComentarBerita(@Header("Authorization") String token, @Field("id_berita") String id_berita, @Field("balasan") String balasan);
     @GET("/api/berita-balasan/{id}")
     Call<List<Komentar>> getComentarBerita(@Header("Authorization") String token, @Path("id") String id);
-
+    @GET("/api/penduduk-search/{nik}")
+    Call<Penduduk> searchPenduduk(@Path("nik") String nik);
+    @POST("/api/pengguna")
+    @FormUrlEncoded
+    Call<ResponseBody> register(@Field("id_penduduk") String id_penduduk, @Field("email") String email, @Field("password") String password, @Field("no_telpon") String no_telpon);
 }

@@ -1,8 +1,8 @@
 package com.jatmika.e_complaintrangkasbitung.Model;
 
 public class Penduduk {
-    private String nama_penduduk, jenis_kelamin, tempat_lahir, tanggal_lahir, alamat;
-    private Integer nik, id_penduduk;
+    private String nama_penduduk, jenis_kelamin, tempat_lahir, tanggal_lahir, alamat, nik;
+    private Integer id_penduduk;
     private int position;
     public Penduduk(){
 
@@ -12,7 +12,7 @@ public class Penduduk {
         this.position = position;
     }
 
-    public Penduduk(String nama_penduduk, String jenis_kelamin, String tempat_lahir, String tanggal_lahir, String alamat, Integer nik, Integer id_penduduk){
+    public Penduduk(String nama_penduduk, String jenis_kelamin, String tempat_lahir, String tanggal_lahir, String alamat, String nik, Integer id_penduduk){
         this.nama_penduduk = nama_penduduk;
         this.id_penduduk = id_penduduk;
         this.jenis_kelamin = jenis_kelamin;
@@ -46,11 +46,11 @@ public class Penduduk {
         return jenis_kelamin;
     }
 
-    public void setNik(Integer nik) {
+    public void setNik(String nik) {
         this.nik = nik;
     }
 
-    public Integer getNik() {
+    public String getNik() {
         return nik;
     }
 
