@@ -70,8 +70,9 @@ public class RecyclerAdapterKomplain extends RecyclerView.Adapter<RecyclerAdapte
         if (foto.equals("")){
             holder.fotoImageView.setImageResource(R.drawable.placeholder3);
         } else {
+            String urlImage = "http://192.168.216.94:8000/uploads/"+currentKomplain.getFoto();
             Glide.with(mContext)
-                    .load(currentKomplain.getFoto())
+                    .load(urlImage)
                     .into(holder.fotoImageView);
         }
     }

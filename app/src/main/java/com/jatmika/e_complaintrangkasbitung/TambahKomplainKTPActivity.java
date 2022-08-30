@@ -4,7 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import pl.aprilapps.easyphotopicker.EasyImage;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -42,10 +49,14 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
 import com.jatmika.e_complaintrangkasbitung.Model.MySingleton;
+import com.jatmika.e_complaintrangkasbitung.Model.Penduduk;
 import com.jatmika.e_complaintrangkasbitung.Model.PersentaseKomplain;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,6 +66,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.text.TextUtils.isEmpty;
@@ -79,7 +91,8 @@ public class TambahKomplainKTPActivity extends AppCompatActivity {
     RelativeLayout btnBack;
     Animation fromright;
     Calendar myCalendar;
-
+    SharePref sharePref;
+    API apiService;
     StorageReference mStorageRef;
     DatabaseReference mDatabaseRef, databaseReference;
     FirebaseAuth mAuth;
@@ -128,61 +141,56 @@ public class TambahKomplainKTPActivity extends AppCompatActivity {
         String myFormat2 = "yyyy";
         final SimpleDateFormat sdf2 = new SimpleDateFormat(myFormat2);
         edTanggal.setText(sdf.format(myCalendar.getTime()));
+        sharePref = new SharePref(this);
+        apiService = APIUtility.getAPI();
+
+        apiService.getPenduduk("Bearer "+sharePref.getTokenApi(), sharePref.getIdPenduduk()).enqueue(new Callback<Penduduk>() {
+            @Override
+            public void onResponse(Call<Penduduk> call, retrofit2.Response<Penduduk> response) {
+                Log.i("responseAPI", response.toString());
+                edNik.setText(response.body().getNik().toString());
+                edNama.setText(response.body().getNama_penduduk());
+                edAlamat.setText(response.body().getAlamat());
+            }
+
+            @Override
+            public void onFailure(Call<Penduduk> call, Throwable t) {
+
+            }
+        });
 
         mAuth = FirebaseAuth.getInstance();
         firebaseUser = mAuth.getCurrentUser();
 
         databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
-        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot dataUser : dataSnapshot.getChildren()) {
-                                DataUser data = dataUser.getValue(DataUser.class);
-                                String nik = (String) dataUser.child("nik").getValue();
-                                String email2 = (String) dataUser.child("email").getValue();
-                                String nama = (String) dataUser.child("nama").getValue();
-                                String alamat = (String) dataUser.child("alamat").getValue();
 
-                                edNik.setText(nik);
-                                email = email2;
-                                edNama.setText(nama);
-                                edAlamat.setText(alamat);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-
-        FirebaseDatabase.getInstance().getReference("data_komplain").addListenerForSingleValueEvent(new ValueEventListener() {
+        apiService.getComplain("Bearer "+sharePref.getTokenApi(), "all").enqueue(new Callback<List<Komplain>>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
-                    int satuan = 1;
-                    long totalData;
-                    totalData = dataSnapshot.getChildrenCount();
-                    totalBaru = satuan + totalData;
+            public void onResponse(Call<List<Komplain>> call, retrofit2.Response<List<Komplain>> response) {
+                if(response.code() == 200){
+                    if(response.body().size() > 0){
+                        int satuan = 1;
+                        long totalData;
+                        totalData = response.body().size();
+                        totalBaru = satuan + totalData;
 
-                    if(totalBaru > 9){
-                        edNomor.setText("411.3/"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        if(totalBaru > 9){
+                            edNomor.setText("411.3/"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        } else {
+                            edNomor.setText("411.3/0"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        }
                     } else {
-                        edNomor.setText("411.3/0"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
                     }
-                } else {
-                    edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onFailure(Call<List<Komplain>> call, Throwable t) {
 
             }
         });
+
 
         FirebaseDatabase.getInstance().getReference("data_persentase_komplain").orderByChild("kategori").equalTo("Komplain IUMK")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -418,120 +426,152 @@ public class TambahKomplainKTPActivity extends AppCompatActivity {
             mBuilder.setView(mView);
             mBuilder.setCancelable(false);
             final AlertDialog mDialog = mBuilder.create();
+            Log.i("image", data.toString());
             mDialog.show();
 
-            UploadTask uploadTask = fileReference.putBytes(data);
-            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),data);
+            RequestBody alamat =
+                    RequestBody.create(MediaType.parse("multipart/form-data"), edAlamat.getText().toString());
+            RequestBody berkas = RequestBody.create(MediaType.parse("multipart/form-data"), "");
+            RequestBody isi = RequestBody.create(MediaType.parse("multipart/form-data"), edIsi.getText().toString());
+            RequestBody kategori = RequestBody.create(MediaType.parse("multipart/form-data"), "ktp");
+            RequestBody no_komplain = RequestBody.create(MediaType.parse("multipart/form-data"), edNomor.getText().toString());
+            RequestBody status = RequestBody.create(MediaType.parse("multipart/form-data"), Status);
+
+
+            MultipartBody.Part body =
+                    MultipartBody.Part.createFormData("foto", System.currentTimeMillis()
+                            + "." + getFileExtension(data), requestFile);
+            apiService.postComplain("Bearer "+sharePref.getTokenApi(), alamat, berkas, isi, kategori, status, no_komplain, body).enqueue(new Callback<ResponseBody>() {
                 @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                        }
-                    }, 300);
-
-                    fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            Komplain upload = new Komplain(uri.toString(), "", edNomor.getText().toString(), edNik.getText().toString(), email,
-                                    edNama.getText().toString(), edAlamat.getText().toString(), edTanggal.getText().toString(), namalokasi,
-                                    latitude, longitude, edIsi.getText().toString(), Kategori, Status, Lihat, Suka, Balas);
-
-                            String uploadId = mDatabaseRef.push().getKey();
-                            mDatabaseRef.child(uploadId).setValue(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    FirebaseDatabase.getInstance().getReference("data_komplain").orderByChild("kategori").equalTo("Komplain KTP").addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            if (dataSnapshot.exists()){
-                                                long totalData = dataSnapshot.getChildrenCount();
-                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("jumlah_komplain").setValue(String.valueOf(totalData));
-                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("kategori").setValue("Komplain KTP");
-                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").orderByChild("kategori").equalTo("Komplain KTP").addListenerForSingleValueEvent(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                        if (dataSnapshot.exists()){
-                                                            for (DataSnapshot dataPersentase: dataSnapshot.getChildren()) {
-                                                                PersentaseKomplain data = dataPersentase.getValue(PersentaseKomplain.class);
-                                                                final String getKey = (String) dataPersentase.getKey();
-                                                                final String kategori = (String) dataPersentase.child("kategori").getValue();
-                                                                jumlahKomplainKTP = (String) dataPersentase.child("jumlah_komplain").getValue();
-
-                                                                double komplainIUMK = Double.parseDouble(jumlahKomplainIUMK);
-                                                                double komplainKependudukan = Double.parseDouble(jumlahKomplainKependudukan);
-                                                                double komplainKTP = Double.parseDouble(jumlahKomplainKTP);
-                                                                double komplainNikah = Double.parseDouble(jumlahKomplainNikah);
-                                                                double komplainSPPT = Double.parseDouble(jumlahKomplainSPPT);
-                                                                double komplainTutupJalan = Double.parseDouble(jumlahKomplainTutupJalan);
-                                                                double TotalPersen2 = (komplainIUMK / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-                                                                double TotalPersen3 = (komplainKependudukan / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-                                                                double TotalPersen4 = (komplainKTP / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-                                                                double TotalPersen5 = (komplainNikah / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-                                                                double TotalPersen6 = (komplainSPPT / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-                                                                double TotalPersen7 = (komplainTutupJalan / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
-
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain IUMK").child("persen").setValue(String.valueOf(TotalPersen2));
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Kependudukan").child("persen").setValue(String.valueOf(TotalPersen3));
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("persen").setValue(String.valueOf(TotalPersen4));
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Nikah").child("persen").setValue(String.valueOf(TotalPersen5));
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain SPPT").child("persen").setValue(String.valueOf(TotalPersen6));
-                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Tutup Jalan").child("persen").setValue(String.valueOf(TotalPersen7));
-
-                                                                TOPIC = "/topics/komplain";
-                                                                NOTIFICATION_TITLE = "Komplain Baru Diterima";
-                                                                NOTIFICATION_MESSAGE = "Dari : " +edNama.getText().toString();
-
-                                                                JSONObject notification = new JSONObject();
-                                                                JSONObject notifcationBody = new JSONObject();
-                                                                try {
-                                                                    notifcationBody.put("title", NOTIFICATION_TITLE);
-                                                                    notifcationBody.put("message", NOTIFICATION_MESSAGE);
-
-                                                                    notification.put("to", TOPIC);
-                                                                    notification.put("data", notifcationBody);
-                                                                } catch (JSONException e) {
-                                                                    Log.e(TAG, "onCreate: " + e.getMessage() );
-                                                                }
-                                                                sendNotification(notification);
-
-                                                                Toast.makeText(TambahKomplainKTPActivity.this, "Komplain berhasil dikirim!", Toast.LENGTH_LONG).show();
+                public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                    Log.i("checkUpload", response.toString());
+                    if (response.code() == 200){
+                        Toast.makeText(TambahKomplainKTPActivity.this, "Komplain berhasil dikirim!", Toast.LENGTH_LONG).show();
                                                                 mDialog.dismiss();
                                                                 startActivity(new Intent(TambahKomplainKTPActivity.this, MainActivity.class));
-                                                            }
-                                                        }
-                                                    }
-
-                                                    @Override
-                                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                                    }
-                                                });
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
+                    }
                 }
-            }).addOnFailureListener(new OnFailureListener() {
+
                 @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(TambahKomplainKTPActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                    double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
                 }
             });
+
+
+//            UploadTask uploadTask = fileReference.putBytes(data);
+//            uploadTask.addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+//                @Override
+//                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+//                    Handler handler = new Handler();
+//                    handler.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                        }
+//                    }, 300);
+//
+//                    fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+//                        @Override
+//                        public void onSuccess(Uri uri) {
+//                            Komplain upload = new Komplain(uri.toString(), "", edNomor.getText().toString(), edNik.getText().toString(), email,
+//                                    edNama.getText().toString(), edAlamat.getText().toString(), edTanggal.getText().toString(), namalokasi,
+//                                    latitude, longitude, edIsi.getText().toString(), Kategori, Status, Lihat, Suka, Balas);
+//
+//                            String uploadId = mDatabaseRef.push().getKey();
+//                            mDatabaseRef.child(uploadId).setValue(upload).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                @Override
+//                                public void onSuccess(Void aVoid) {
+//                                    FirebaseDatabase.getInstance().getReference("data_komplain").orderByChild("kategori").equalTo("Komplain KTP").addListenerForSingleValueEvent(new ValueEventListener() {
+//                                        @Override
+//                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                            if (dataSnapshot.exists()){
+//                                                long totalData = dataSnapshot.getChildrenCount();
+//                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("jumlah_komplain").setValue(String.valueOf(totalData));
+//                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("kategori").setValue("Komplain KTP");
+//                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").orderByChild("kategori").equalTo("Komplain KTP").addListenerForSingleValueEvent(new ValueEventListener() {
+//                                                    @Override
+//                                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                                        if (dataSnapshot.exists()){
+//                                                            for (DataSnapshot dataPersentase: dataSnapshot.getChildren()) {
+//                                                                PersentaseKomplain data = dataPersentase.getValue(PersentaseKomplain.class);
+//                                                                final String getKey = (String) dataPersentase.getKey();
+//                                                                final String kategori = (String) dataPersentase.child("kategori").getValue();
+//                                                                jumlahKomplainKTP = (String) dataPersentase.child("jumlah_komplain").getValue();
+//
+//                                                                double komplainIUMK = Double.parseDouble(jumlahKomplainIUMK);
+//                                                                double komplainKependudukan = Double.parseDouble(jumlahKomplainKependudukan);
+//                                                                double komplainKTP = Double.parseDouble(jumlahKomplainKTP);
+//                                                                double komplainNikah = Double.parseDouble(jumlahKomplainNikah);
+//                                                                double komplainSPPT = Double.parseDouble(jumlahKomplainSPPT);
+//                                                                double komplainTutupJalan = Double.parseDouble(jumlahKomplainTutupJalan);
+//                                                                double TotalPersen2 = (komplainIUMK / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//                                                                double TotalPersen3 = (komplainKependudukan / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//                                                                double TotalPersen4 = (komplainKTP / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//                                                                double TotalPersen5 = (komplainNikah / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//                                                                double TotalPersen6 = (komplainSPPT / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//                                                                double TotalPersen7 = (komplainTutupJalan / (komplainIUMK + komplainKependudukan + komplainKTP + komplainNikah + komplainSPPT + komplainTutupJalan)) * 100;
+//
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain IUMK").child("persen").setValue(String.valueOf(TotalPersen2));
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Kependudukan").child("persen").setValue(String.valueOf(TotalPersen3));
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain KTP").child("persen").setValue(String.valueOf(TotalPersen4));
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Nikah").child("persen").setValue(String.valueOf(TotalPersen5));
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain SPPT").child("persen").setValue(String.valueOf(TotalPersen6));
+//                                                                FirebaseDatabase.getInstance().getReference("data_persentase_komplain").child("Komplain Tutup Jalan").child("persen").setValue(String.valueOf(TotalPersen7));
+//
+//                                                                TOPIC = "/topics/komplain";
+//                                                                NOTIFICATION_TITLE = "Komplain Baru Diterima";
+//                                                                NOTIFICATION_MESSAGE = "Dari : " +edNama.getText().toString();
+//
+//                                                                JSONObject notification = new JSONObject();
+//                                                                JSONObject notifcationBody = new JSONObject();
+//                                                                try {
+//                                                                    notifcationBody.put("title", NOTIFICATION_TITLE);
+//                                                                    notifcationBody.put("message", NOTIFICATION_MESSAGE);
+//
+//                                                                    notification.put("to", TOPIC);
+//                                                                    notification.put("data", notifcationBody);
+//                                                                } catch (JSONException e) {
+//                                                                    Log.e(TAG, "onCreate: " + e.getMessage() );
+//                                                                }
+//                                                                sendNotification(notification);
+//
+//                                                                Toast.makeText(TambahKomplainKTPActivity.this, "Komplain berhasil dikirim!", Toast.LENGTH_LONG).show();
+//                                                                mDialog.dismiss();
+//                                                                startActivity(new Intent(TambahKomplainKTPActivity.this, MainActivity.class));
+//                                                            }
+//                                                        }
+//                                                    }
+//
+//                                                    @Override
+//                                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                                    }
+//                                                });
+//                                            }
+//                                        }
+//
+//                                        @Override
+//                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                        }
+//                                    });
+//                                }
+//                            });
+//                        }
+//                    });
+//                }
+//            }).addOnFailureListener(new OnFailureListener() {
+//                @Override
+//                public void onFailure(@NonNull Exception e) {
+//                    Toast.makeText(TambahKomplainKTPActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+//                }
+//            }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+//                @Override
+//                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+//                    double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+//                }
+//            });
 
         }
     }

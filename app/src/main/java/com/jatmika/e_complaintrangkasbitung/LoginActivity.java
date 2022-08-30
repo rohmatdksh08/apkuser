@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.Window;
@@ -23,6 +24,14 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
+import com.jatmika.e_complaintrangkasbitung.Model.TokenApi;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -33,6 +42,8 @@ public class LoginActivity extends AppCompatActivity {
     ProgressBar progressBar;
     FirebaseAuth auth;
     String show = "SHOW";
+    SharePref sharePref;
+    API apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,10 +51,12 @@ public class LoginActivity extends AppCompatActivity {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_login);
+        sharePref = new SharePref(this);
+        apiService = APIUtility.getAPI();
 
         auth = FirebaseAuth.getInstance();
 
-        if(FirebaseAuth.getInstance().getCurrentUser() != null) {
+        if(sharePref.getStatusLogin() == true) {
             Intent a = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(a);
         }
@@ -111,26 +124,32 @@ public class LoginActivity extends AppCompatActivity {
                     mDialog.dismiss();
                     return;
                 }
+                Log.i("codeError", "code"+edPass.getText().toString());
 
-                auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                if(!task.isSuccessful()){
-                                    if (password.length() < 6) {
-                                        Toast.makeText(LoginActivity.this, "Password minimal harus 6 karakter!", Toast.LENGTH_SHORT).show();
-                                        mDialog.dismiss();
-                                    } else {
-                                        Toast.makeText(LoginActivity.this, "Akun belum terdaftar!", Toast.LENGTH_SHORT).show();
-                                        mDialog.dismiss();
-                                    }
-                                } else {
-                                    startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                    mDialog.dismiss();
-                                    finish();
-                                }
-                            }
-                        });
+                apiService.login(edEmail.getText().toString(), edPass.getText().toString(), "android").enqueue(new Callback<TokenApi>() {
+                    @Override
+                    public void onResponse(Call<TokenApi> call, Response<TokenApi> response) {
+                        Log.i("codeError", "code"+response.code());
+                        mDialog.dismiss();
+                        if(response.body().getCode() == 404){
+                            Toast.makeText(LoginActivity.this, "Akun tidak ditemukan", Toast.LENGTH_SHORT).show();
+                        }
+
+                        if (response.body().getCode() == 200){
+                            Log.i("token", response.body().getAccessToken());
+                            sharePref.setStatusLogin(true);
+                            sharePref.setTokenApi(response.body().getAccessToken());
+                            sharePref.setIdPenduduk(response.body().getIdPenduduk());
+                            Intent dashboard = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(dashboard);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TokenApi> call, Throwable t) {
+                        Log.i("errorResponse", t.toString());
+                    }
+                });
             }
         });
     }

@@ -22,10 +22,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Model.DataBerita;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 /**
@@ -42,6 +49,8 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
     DatabaseReference mDatabaseRef;
     private ValueEventListener mDBListener;
     private List<DataBerita> mPengaduans;
+    SharePref sharePref;
+    API apiService;
 
     private void openDetailActivity(String[] data){
         Intent intent = new Intent(getActivity(), DetailBeritaActivity.class);
@@ -75,28 +84,26 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
         mProgressBar = view.findViewById(R.id.myDataLoaderProgressBar);
         mProgressBar.setVisibility(View.VISIBLE);
 
+        sharePref = new SharePref(getActivity().getApplicationContext());
+        apiService = APIUtility.getAPI();
+
         mPengaduans = new ArrayList<>();
         mAdapter = new RecyclerAdapter(getActivity(), mPengaduans);
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(this);
 
         mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_berita");
-
-        mDBListener = mDatabaseRef.addValueEventListener(new ValueEventListener() {
+        apiService.getBerita("Bearer "+sharePref.getTokenApi()).enqueue(new Callback<List<DataBerita>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                if (dataSnapshot.exists()) {
-                    mPengaduans.clear();
-                    for (DataSnapshot kandidatSnapshot : dataSnapshot.getChildren()) {
-                        DataBerita upload = kandidatSnapshot.getValue(DataBerita.class);
-                        upload.setKey(kandidatSnapshot.getKey());
-                        mPengaduans.add(upload);
+            public void onResponse(Call<List<DataBerita>> call, Response<List<DataBerita>> response) {
+                if(response.body().size() > 0){
+                    for (DataBerita dataBerita : response.body()){
+                        mPengaduans.add(dataBerita);
                     }
                     mAdapter.notifyDataSetChanged();
                     tvNoData.setVisibility(View.GONE);
                     mProgressBar.setVisibility(View.GONE);
-                } else {
+                }else{
                     tvNoData.setVisibility(View.VISIBLE);
                     tvNoData.setText("Belum Ada Berita");
                     mProgressBar.setVisibility(View.GONE);
@@ -104,11 +111,38 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                mProgressBar.setVisibility(View.INVISIBLE);
+            public void onFailure(Call<List<DataBerita>> call, Throwable t) {
+
             }
         });
+
+//        mDBListener = mDatabaseRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                if (dataSnapshot.exists()) {
+//                    mPengaduans.clear();
+//                    for (DataSnapshot kandidatSnapshot : dataSnapshot.getChildren()) {
+//                        DataBerita upload = kandidatSnapshot.getValue(DataBerita.class);
+//                        upload.setKey(kandidatSnapshot.getKey());
+//                        mPengaduans.add(upload);
+//                    }
+//                    mAdapter.notifyDataSetChanged();
+//                    tvNoData.setVisibility(View.GONE);
+//                    mProgressBar.setVisibility(View.GONE);
+//                } else {
+//                    tvNoData.setVisibility(View.VISIBLE);
+//                    tvNoData.setText("Belum Ada Berita");
+//                    mProgressBar.setVisibility(View.GONE);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+//                mProgressBar.setVisibility(View.INVISIBLE);
+//            }
+//        });
 
         return view;
     }
@@ -116,8 +150,8 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
     @Override
     public void onItemClick(int position) {
         DataBerita clickedBerita = mPengaduans.get(position);
-        String[] beritaData = {clickedBerita.getJudulberita(), clickedBerita.getTanggalposting(), clickedBerita.getPenulis(),
-                clickedBerita.getIsiberita(), clickedBerita.getFoto(), clickedBerita.getKey()};
+        String[] beritaData = {clickedBerita.getjudul(), clickedBerita.getcreated_at(), clickedBerita.getnama(),
+                clickedBerita.getisi(), clickedBerita.getFoto(), clickedBerita.getid_berita()};
         openDetailActivity(beritaData);
     }
 }

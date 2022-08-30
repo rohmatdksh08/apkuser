@@ -21,8 +21,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.PagerAdapter;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -39,6 +42,11 @@ import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -48,6 +56,8 @@ public class MainActivity extends AppCompatActivity
     DatabaseReference databaseReference;
     String emailTopic;
     FirebaseAuth mAuth;
+    SharePref sharePref;
+    API apiService;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -87,37 +97,12 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-
-        if(FirebaseAuth.getInstance().getCurrentUser() == null) {
+        sharePref = new SharePref(this);
+        apiService = APIUtility.getAPI();
+        if(sharePref.getStatusLogin() == false) {
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
-        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot dataMahasiswa : dataSnapshot.getChildren()) {
-                                DataUser data = dataMahasiswa.getValue(DataUser.class);
-                                String email = (String) dataMahasiswa.child("email").getValue();
-
-                                emailTopic = email;
-                                emailTopic = emailTopic.replaceAll("[@.-]", "");
-
-                                String token = FirebaseInstanceId.getInstance().getToken();
-                                SUBSCRIBE_TO = String.valueOf(emailTopic);
-                                FirebaseMessaging.getInstance().subscribeToTopic(SUBSCRIBE_TO);
-                                Log.i(TAG, "onTokenRefresh completed with token: " + token);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -165,15 +150,21 @@ public class MainActivity extends AppCompatActivity
                 .setCancelable(false)
                 .setPositiveButton("Ya",new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog,int id) {
+                        apiService.logout("Bearer "+sharePref.getTokenApi()).enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                if(response.code() == 200){
+                                    sharePref.setStatusLogin(false);
+                                    Intent a = new Intent(MainActivity.this, LoginActivity.class);
+                                    startActivity(a);
+                                }
+                            }
 
-                        mAuth.signOut();
+                            @Override
+                            public void onFailure(Call<ResponseBody> call, Throwable t) {
 
-                        SUBSCRIBE_TO = String.valueOf(emailTopic);
-                        FirebaseMessaging.getInstance().unsubscribeFromTopic(String.valueOf(SUBSCRIBE_TO));
-
-                        Toast.makeText(MainActivity.this, "Anda telah berhasil logout!", Toast.LENGTH_LONG).show();
-                        Intent a = new Intent(MainActivity.this, LoginActivity.class);
-                        startActivity(a);
+                            }
+                        });
                     }
                 })
                 .setNegativeButton("Tidak",new DialogInterface.OnClickListener() {

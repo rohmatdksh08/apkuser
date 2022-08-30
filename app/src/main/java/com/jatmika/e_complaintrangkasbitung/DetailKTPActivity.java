@@ -43,6 +43,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterKomentar;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterProses;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
@@ -50,6 +52,7 @@ import com.jatmika.e_complaintrangkasbitung.Model.Komentar;
 import com.jatmika.e_complaintrangkasbitung.Model.MySingleton;
 import com.jatmika.e_complaintrangkasbitung.Model.Proses;
 import com.jatmika.e_complaintrangkasbitung.Model.Suka;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 import com.uncopt.android.widget.text.justify.JustifiedTextView;
 
 import org.json.JSONException;
@@ -62,6 +65,10 @@ import java.util.List;
 import java.util.Map;
 
 import static android.text.TextUtils.isEmpty;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class DetailKTPActivity extends AppCompatActivity {
 
@@ -94,6 +101,8 @@ public class DetailKTPActivity extends AppCompatActivity {
 
     FirebaseAuth mAuth;
     FirebaseUser firebaseUser;
+    API apiService;
+    SharePref sharePref;
 
     int satuan;
 
@@ -147,6 +156,8 @@ public class DetailKTPActivity extends AppCompatActivity {
         jml_suka = i.getExtras().getString("JML_SUKA_KEY");
         jml_balas = i.getExtras().getString("JML_BALAS_KEY");
         getKey = i.getExtras().getString("GETPRIMARY_KEY");
+        apiService = APIUtility.getAPI();
+        sharePref = new SharePref(this);
 
         initializeWidgets();
         displayKomentar();
@@ -168,8 +179,9 @@ public class DetailKTPActivity extends AppCompatActivity {
         tanggalDetailTextView.setText(tanggal);
         isiDetailTextView.setText("''"+isi+"''");
         statusDetailtextView.setText(status);
+        String urlImage = "http://192.168.216.94:8000/uploads/"+image;
         Glide.with(this)
-                .load(image)
+                .load(urlImage)
                 .into(fotoDetailImageView);
 
         fotoDetailImageView.setOnClickListener(new View.OnClickListener() {
@@ -181,7 +193,7 @@ public class DetailKTPActivity extends AppCompatActivity {
                 TextView btnClose = mView.findViewById(R.id.btnClose);
 
                 Glide.with(DetailKTPActivity.this)
-                        .load(image)
+                        .load(urlImage)
                         .into(imageView);
 
                 mBuilder.setView(mView);
@@ -197,11 +209,10 @@ public class DetailKTPActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").orderByChild("email")
-                .equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+        apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                if(response.code() == 200) {
                     imageSuka.setVisibility(View.GONE);
                     tvStatusSuka.setText("Terima kasih telah menyukai ini");
                 } else {
@@ -211,49 +222,7 @@ public class DetailKTPActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                satuan = 1;
-                int jml_lihatlama = Integer.parseInt(jml_lihat);
-                final int total = satuan + jml_lihatlama;
-
-                if (dataSnapshot.exists()) {
-                    final long totalSuka;
-                    totalSuka = (dataSnapshot.getChildrenCount());
-
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka));
-                                }
-                            });
-                } else {
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue("0")
-                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                @Override
-                                                public void onSuccess(Void aVoid) {
-                                                    imageSuka.setVisibility(View.VISIBLE);
-                                                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
-                                                }
-                                            });
-                                }
-                            });
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
 
             }
         });
@@ -261,44 +230,126 @@ public class DetailKTPActivity extends AppCompatActivity {
         imageSuka.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(new Suka(FirebaseAuth.getInstance().getCurrentUser().getEmail(),
-                        nama))
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        if (dataSnapshot.exists()) {
-                                            long totalSuka;
-                                            totalSuka = (dataSnapshot.getChildrenCount());
-                                            FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka))
-                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                        @Override
-                                                        public void onSuccess(Void aVoid) {
-                                                            linear1.setVisibility(View.VISIBLE);
-                                                            imageSuka.setVisibility(View.GONE);
-                                                            tvStatusSuka.setText("Terima kasih telah menyukai ini");
-                                                        }
-                                                    });
-                                        }
-                                    }
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                apiService.addLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                        if (response.code() == 200){
+                            linear1.setVisibility(View.VISIBLE);
+                            imageSuka.setVisibility(View.GONE);
+                            tvStatusSuka.setText("Terima kasih telah menyukai ini");
+                        }
+                    }
 
-                                    }
-                                });
-                            }
-                        });
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                    }
+                });
             }
         });
 
-        if (mAuth.getCurrentUser().getEmail().equals(emailDetailTextView.getText().toString())) {
-            btnTambahKomentar.setVisibility(View.VISIBLE);
-        } else {
-            btnTambahKomentar.setVisibility(View.GONE);
-        }
+//        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").orderByChild("email")
+//                .equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                if(dataSnapshot.exists()) {
+//                    imageSuka.setVisibility(View.GONE);
+//                    tvStatusSuka.setText("Terima kasih telah menyukai ini");
+//                } else {
+//                    imageSuka.setVisibility(View.VISIBLE);
+//                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+
+//        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                satuan = 1;
+//                int jml_lihatlama = Integer.parseInt(jml_lihat);
+//                final int total = satuan + jml_lihatlama;
+//
+//                if (dataSnapshot.exists()) {
+//                    final long totalSuka;
+//                    totalSuka = (dataSnapshot.getChildrenCount());
+//
+//                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
+//                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                @Override
+//                                public void onSuccess(Void aVoid) {
+//                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka));
+//                                }
+//                            });
+//                } else {
+//                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
+//                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                @Override
+//                                public void onSuccess(Void aVoid) {
+//                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue("0")
+//                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                                @Override
+//                                                public void onSuccess(Void aVoid) {
+//                                                    imageSuka.setVisibility(View.VISIBLE);
+//                                                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
+//                                                }
+//                                            });
+//                                }
+//                            });
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+
+//        imageSuka.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka")
+//                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(new Suka(FirebaseAuth.getInstance().getCurrentUser().getEmail(),
+//                        nama))
+//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                            @Override
+//                            public void onSuccess(Void aVoid) {
+//                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
+//                                    @Override
+//                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                        if (dataSnapshot.exists()) {
+//                                            long totalSuka;
+//                                            totalSuka = (dataSnapshot.getChildrenCount());
+//                                            FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka))
+//                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+//                                                        @Override
+//                                                        public void onSuccess(Void aVoid) {
+//                                                            linear1.setVisibility(View.VISIBLE);
+//                                                            imageSuka.setVisibility(View.GONE);
+//                                                            tvStatusSuka.setText("Terima kasih telah menyukai ini");
+//                                                        }
+//                                                    });
+//                                        }
+//                                    }
+//                                    @Override
+//                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                    }
+//                                });
+//                            }
+//                        });
+//            }
+//        });
+
+//        if (mAuth.getCurrentUser().getEmail().equals(emailDetailTextView.getText().toString())) {
+//            btnTambahKomentar.setVisibility(View.VISIBLE);
+//        } else {
+//            btnTambahKomentar.setVisibility(View.GONE);
+//        }
 
         relative1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -410,98 +461,30 @@ public class DetailKTPActivity extends AppCompatActivity {
                     mDialog.dismiss();
 
                 } else {
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey)
-                            .child("balasan").push().setValue(new Komentar(input.getText().toString(),
-                            namaDetailTextView.getText().toString(), firebaseUser.getEmail())).addOnSuccessListener(new OnSuccessListener<Void>() {
+                    apiService.addComentar("Bearer "+sharePref.getTokenApi(), getKey, input.getText().toString()).enqueue(new Callback<Komentar>() {
+                        @Override
+                        public void onResponse(Call<Komentar> call, retrofit2.Response<Komentar> response) {
+                            Log.i("responseAPI", response.body().toString());
+                            linear2.setVisibility(View.GONE);
+                            input.setText("");
+                            btnTambahKomentar.setVisibility(View.VISIBLE);
+                            mDialog.dismiss();
+
+                            scrollView.postDelayed(new Runnable() {
                                 @Override
-                                public void onSuccess(Void aVoid) {
-                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("balasan").addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            if (dataSnapshot.exists()) {
-                                                long totalBalas;
-                                                totalBalas = (dataSnapshot.getChildrenCount());
-                                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_balas").setValue(String.valueOf(totalBalas))
-                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                            @Override
-                                                            public void onSuccess(Void aVoid) {
-                                                                TOPIC = "/topics/komplain";
-                                                                NOTIFICATION_TITLE = "Balasan Komplain Diterima";
-                                                                NOTIFICATION_MESSAGE = "Dari : " +namaDetailTextView.getText().toString();
-
-                                                                JSONObject notification = new JSONObject();
-                                                                JSONObject notifcationBody = new JSONObject();
-                                                                try {
-                                                                    notifcationBody.put("title", NOTIFICATION_TITLE);
-                                                                    notifcationBody.put("message", NOTIFICATION_MESSAGE);
-
-                                                                    notification.put("to", TOPIC);
-                                                                    notification.put("data", notifcationBody);
-                                                                } catch (JSONException e) {
-                                                                    Log.e(TAG, "onCreate: " + e.getMessage() );
-                                                                }
-                                                                sendNotification(notification);
-
-                                                                linear2.setVisibility(View.GONE);
-                                                                input.setText("");
-                                                                btnTambahKomentar.setVisibility(View.VISIBLE);
-                                                                mDialog.dismiss();
-
-                                                                scrollView.postDelayed(new Runnable() {
-                                                                    @Override
-                                                                    public void run() {
-                                                                        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                                                        scrollView.isSmoothScrollingEnabled();
-                                                                    }
-                                                                    }, 200);
-                                                            }
-                                                        });
-                                            } else {
-                                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_balas").setValue("0")
-                                                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                            @Override
-                                                            public void onSuccess(Void aVoid) {
-                                                                TOPIC = "/topics/komplain";
-                                                                NOTIFICATION_TITLE = "Balasan Komplain Diterima";
-                                                                NOTIFICATION_MESSAGE = "Dari : " +namaDetailTextView.getText().toString();
-
-                                                                JSONObject notification = new JSONObject();
-                                                                JSONObject notifcationBody = new JSONObject();
-                                                                try {
-                                                                    notifcationBody.put("title", NOTIFICATION_TITLE);
-                                                                    notifcationBody.put("message", NOTIFICATION_MESSAGE);
-
-                                                                    notification.put("to", TOPIC);
-                                                                    notification.put("data", notifcationBody);
-                                                                } catch (JSONException e) {
-                                                                    Log.e(TAG, "onCreate: " + e.getMessage() );
-                                                                }
-                                                                sendNotification(notification);
-
-                                                                linear2.setVisibility(View.GONE);
-                                                                input.setText("");
-                                                                btnTambahKomentar.setVisibility(View.VISIBLE);
-                                                                mDialog.dismiss();
-
-                                                                scrollView.postDelayed(new Runnable() {
-                                                                    @Override
-                                                                    public void run() {
-                                                                        scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                                                        scrollView.isSmoothScrollingEnabled();
-                                                                    }
-                                                                    }, 200);
-                                                            }
-                                                        });
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
+                                public void run() {
+                                    scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                                    scrollView.isSmoothScrollingEnabled();
                                 }
-                            });
+                            }, 200);
+                            displayKomentar();
+                        }
+
+                        @Override
+                        public void onFailure(Call<Komentar> call, Throwable t) {
+                            Log.i("responseAPI", t.toString());
+                        }
+                    });
                 }
             }
         });
@@ -554,37 +537,27 @@ public class DetailKTPActivity extends AppCompatActivity {
         mAdapter = new RecyclerAdapterKomentar (DetailKTPActivity.this, mKomentar);
         mRecyclerView.setAdapter(mAdapter);
 
-        mStorage = FirebaseStorage.getInstance();
-        mStorageRef = FirebaseStorage.getInstance().getReference("foto_komentar");
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("balasan");
-        mDBListener = mDatabaseRef.addValueEventListener(new ValueEventListener() {
+        apiService.getComentar("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<List<Komentar>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    mKomentar.clear();
-                    for (DataSnapshot komentarSnapshot : dataSnapshot.getChildren()) {
-                        Komentar upload = komentarSnapshot.getValue(Komentar.class);
-                        upload.setKey(komentarSnapshot.getKey());
-                        mKomentar.add(upload);
+            public void onResponse(Call<List<Komentar>> call, retrofit2.Response<List<Komentar>> response) {
+                Log.i("response", "code"+getKey);
+                if(response.code() == 200){
+                    for (Komentar komentar : response.body()){
+                        if(komentar != null)
+                            mKomentar.add(komentar);
                     }
                     mAdapter.notifyDataSetChanged();
                     tvBalas.setText("Balasan Komplain");
                     layout_kerangka.setVisibility(View.VISIBLE);
-
-                } else if (mAuth.getCurrentUser().getEmail().equals(emailDetailTextView.getText().toString())
-                        || dataSnapshot.exists()){
-                    tvBalas.setText("Balasan Komplain");
-                    layout_kerangka.setVisibility(View.VISIBLE);
-
-                } else{
+                }else{
                     tvBalas.setText("Belum Ada Balasan");
-                    layout_kerangka.setVisibility(View.GONE);
+                    layout_kerangka.setVisibility(View.VISIBLE);
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(DetailKTPActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<Komentar>> call, Throwable t) {
+                Log.i("errorResponse", t.toString());
             }
         });
     }
