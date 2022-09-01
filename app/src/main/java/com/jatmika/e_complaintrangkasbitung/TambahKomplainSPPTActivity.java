@@ -6,9 +6,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -53,13 +59,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import static android.text.TextUtils.isEmpty;
 
@@ -390,9 +400,11 @@ public class TambahKomplainSPPTActivity extends AppCompatActivity {
             mBuilder.setCancelable(false);
             final AlertDialog mDialog = mBuilder.create();
             mDialog.show();
-            Log.i("file", mImageUri.toString());
+            String path= mImageUri.getPath();
+            final File file = new File(Uri.parse(path).toString());
 
-            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),getStringPdf(mImageUri));
+
+            RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"),getBytes(mImageUri));
             RequestBody alamat =
                     RequestBody.create(MediaType.parse("multipart/form-data"), edAlamat.getText().toString());
             RequestBody isi = RequestBody.create(MediaType.parse("multipart/form-data"), edIsi.getText().toString());
@@ -629,34 +641,33 @@ public class TambahKomplainSPPTActivity extends AppCompatActivity {
         }
     }
 
-    public String getStringPdf (Uri filepath){
-        InputStream inputStream = null;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    private byte[] getBytes(Uri uri) {
         try {
-            inputStream =  getContentResolver().openInputStream(filepath);
+            InputStream inputStream = getApplicationContext().getContentResolver().openInputStream(uri);
+            return readBytes(inputStream);
 
-            byte[] buffer = new byte[1024];
-            byteArrayOutputStream = new ByteArrayOutputStream();
+        } catch (Exception ex) {
+            Log.d("could not get byte stream",ex.toString());
+        }
+        return null;
+    }
 
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                byteArrayOutputStream.write(buffer, 0, bytesRead);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+    private byte[] readBytes(InputStream inputStream) throws IOException {
+        // this dynamically extends to take the bytes you read
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+        // this is storage overwritten on each iteration with bytes
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        // we need to know how may bytes were read to write them to the byteBuffer
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
         }
 
-        byte[] pdfByteArray = byteArrayOutputStream.toByteArray();
-
-        return Base64.encodeToString(pdfByteArray, Base64.DEFAULT);
+        // and then we can return your byte array.
+        return byteBuffer.toByteArray();
     }
 
     private void sendNotification(JSONObject notification) {
