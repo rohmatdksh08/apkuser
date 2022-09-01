@@ -1,7 +1,7 @@
 package com.jatmika.e_complaintrangkasbitung.Model;
 
 public class Komplain {
-    private String foto, berkas, no_komplain, nik, email, nama, alamat, tanggal, namalokasi, isi, kategori, status,
+    private String foto, berkas, no_komplain, nik, id_pengguna, nama, alamat, tanggal, namalokasi, isi, kategori, status,
             jml_lihat, jml_suka, jml_balas, id_komplain;
     private Double latitude;
     private Double longitude;
@@ -15,14 +15,14 @@ public class Komplain {
         this.position = position;
     }
 
-    public Komplain(String foto, String berkas, String no_komplain, String nik, String email, String nama, String alamat, String tanggal,
+    public Komplain(String foto, String berkas, String no_komplain, String nik, String id_pengguna, String nama, String alamat, String tanggal,
                     String namalokasi, Double latitude, Double longitude, String isi, String kategori, String status, String jml_lihat,
                     String jml_suka, String jml_balas) {
         this.foto = foto;
         this.berkas = berkas;
         this.no_komplain = no_komplain;
         this.nik = nik;
-        this.email = email;
+        this.id_pengguna = id_pengguna;
         this.nama = nama;
         this.alamat = alamat;
         this.tanggal = tanggal;
@@ -66,10 +66,10 @@ public class Komplain {
     }
 
     public String getEmail() {
-        return email;
+        return id_pengguna;
     }
-    public void setEmail(String email) {
-        this.email = email;
+    public void setEmail(String id_pengguna) {
+        this.id_pengguna = id_pengguna;
     }
 
     public String getNama() {

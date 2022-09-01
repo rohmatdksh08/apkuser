@@ -62,4 +62,8 @@ public interface API {
     @POST("/api/pengguna")
     @FormUrlEncoded
     Call<ResponseBody> register(@Field("id_penduduk") String id_penduduk, @Field("email") String email, @Field("password") String password, @Field("no_telpon") String no_telpon);
+    @Multipart
+    @POST("/api/berkas-komplain")
+    Call<ResponseBody> postComplainBerkas(@Header("Authorization") String token, @Part("alamat") RequestBody alamat, @Part("isi") RequestBody isi, @Part("kategori")
+            RequestBody kategori, @Part("status") RequestBody status, @Part("no_komplain") RequestBody no_komplain, @Part MultipartBody.Part berkas);
 }

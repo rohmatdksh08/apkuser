@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,11 +22,18 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterKomplain;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 /**
@@ -37,6 +45,8 @@ public class FragmentSPPT extends Fragment implements RecyclerAdapterKomplain.On
     private DatabaseReference mDatabaseRef;
     private List<Komplain> mPengaduans;
     private TextView tvNoData;
+    SharePref sharePref;
+    API apiService;
 
     private void openDetailKomplainSPPT(String[] data){
         Intent intent = new Intent(getActivity(), DetailSPPTActivity.class);
@@ -76,6 +86,8 @@ public class FragmentSPPT extends Fragment implements RecyclerAdapterKomplain.On
         RecyclerView mRecyclerView = view.findViewById(R.id.mRecyclerView);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        apiService = APIUtility.getAPI();
+        sharePref = new SharePref(getActivity().getApplicationContext());
 
         mPengaduans = new ArrayList<>();
         mAdapter = new RecyclerAdapterKomplain(getActivity(), mPengaduans);
@@ -84,42 +96,57 @@ public class FragmentSPPT extends Fragment implements RecyclerAdapterKomplain.On
 
         mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_komplain");
 
-        mDatabaseRef.addValueEventListener(new ValueEventListener() {
+//        mDatabaseRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                Query query = mDatabaseRef.orderByChild("kategori").equalTo("Komplain SPPT");
+//                query.addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                        if (dataSnapshot.exists()) {
+//                            mPengaduans.clear();
+//                            for (DataSnapshot komplainSnapshot : dataSnapshot.getChildren()) {
+//                                Komplain upload = komplainSnapshot.getValue(Komplain.class);
+//                                upload.setKey(komplainSnapshot.getKey());
+//                                mPengaduans.add(upload);
+//                            }
+//                            mAdapter.notifyDataSetChanged();
+//                            tvNoData.setVisibility(View.GONE);
+//                        } else {
+//                            tvNoData.setVisibility(View.VISIBLE);
+//                            tvNoData.setText("Belum Ada Komplain");
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                    }
+//                });
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+//            }
+//        });
+        apiService.getComplain("Bearer "+sharePref.getTokenApi(), "SPPT").enqueue(new Callback<List<Komplain>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                Query query = mDatabaseRef.orderByChild("kategori").equalTo("Komplain SPPT");
-                query.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            mPengaduans.clear();
-                            for (DataSnapshot komplainSnapshot : dataSnapshot.getChildren()) {
-                                Komplain upload = komplainSnapshot.getValue(Komplain.class);
-                                upload.setKey(komplainSnapshot.getKey());
-                                mPengaduans.add(upload);
-                            }
-                            mAdapter.notifyDataSetChanged();
-                            tvNoData.setVisibility(View.GONE);
-                        } else {
-                            tvNoData.setVisibility(View.VISIBLE);
-                            tvNoData.setText("Belum Ada Komplain");
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+            public void onResponse(Call<List<Komplain>> call, Response<List<Komplain>> response) {
+                Log.i("response", response.body().toString());
+                for (Komplain komplain : response.body()){
+                    mPengaduans.add(komplain);
+                }
+                mAdapter.notifyDataSetChanged();
+                tvNoData.setVisibility(View.GONE);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<Komplain>> call, Throwable t) {
+                Log.i("responseError", t.toString());
             }
         });
-
         return view;
     }
 
