@@ -2,7 +2,7 @@ package com.jatmika.e_complaintrangkasbitung.Model;
 
 public class DataUser {
 
-    private String photo, nik, email, password, nama, ttl, jenkel, alamat, nohp, key;
+    private String nik, nama_penduduk, tanggal_lahir, jenis_kelamin, alamat, tempat_lahir, id_penduduk, no_telpon, email;
     private int position;
 
     public DataUser() {
@@ -13,83 +13,87 @@ public class DataUser {
         this.position = position;
     }
 
-    public DataUser(String photo, String nik, String email, String password, String nama, String ttl, String jenkel, String alamat, String nohp) {
-        this.photo = photo;
+    public DataUser(String nama_penduduk, String nik, String tanggal_lahir, String tempat_lahir, String id_penduduk, String jenis_kelamin, String alamat, String no_telpon, String email) {
         this.nik = nik;
-        this.email = email;
-        this.password = password;
-        this.nama = nama;
-        this.ttl = ttl;
-        this.jenkel = jenkel;
+        this.nama_penduduk = nama_penduduk;
+        this.tanggal_lahir = tanggal_lahir;
+        this.tempat_lahir = tempat_lahir;
+        this.jenis_kelamin = jenis_kelamin;
         this.alamat = alamat;
-        this.nohp = nohp;
+        this.id_penduduk = id_penduduk;
+        this.no_telpon = no_telpon;
+        this.email = email;
     }
 
-    public String getPhoto() {
-        return photo;
+    public void setTempat_lahir(String tempat_lahir) {
+        this.tempat_lahir = tempat_lahir;
     }
-    public void setPhoto(String photo) {
-        this.photo = photo;
+
+    public String getTempat_lahir() {
+        return tempat_lahir;
+    }
+
+    public void setTanggal_lahir(String tanggal_lahir) {
+        this.tanggal_lahir = tanggal_lahir;
+    }
+
+    public String getTanggal_lahir() {
+        return tanggal_lahir;
+    }
+
+    public void setNama_penduduk(String nama_penduduk) {
+        this.nama_penduduk = nama_penduduk;
+    }
+
+    public String getNama_penduduk() {
+        return nama_penduduk;
+    }
+
+    public void setNik(String nik) {
+        this.nik = nik;
     }
 
     public String getNik() {
         return nik;
     }
-    public void setNik(String nik) {
-        this.nik = nik;
+
+    public void setJenis_kelamin(String jenis_kelamin) {
+        this.jenis_kelamin = jenis_kelamin;
     }
 
-    public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
+    public String getJenis_kelamin() {
+        return jenis_kelamin;
     }
 
-    public String getPassword() {
-        return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getNama() {
-        return nama;
-    }
-    public void setNama(String nama) {
-        this.nama = nama;
-    }
-
-    public String getTtl() {
-        return ttl;
-    }
-    public void setTtl(String ttl) {
-        this.ttl = ttl;
-    }
-
-    public String getJenkel(){return jenkel;}
-    public void setJenkel(String jenkel){
-        this.jenkel = jenkel;
+    public void setId_penduduk(String id_penduduk) {
+        this.id_penduduk = id_penduduk;
     }
 
     public String getAlamat() {
         return alamat;
     }
-    public void setAlamat(String alamat) {
-        this.alamat = alamat;
+
+    public int getPosition() {
+        return position;
     }
 
-    public String getNohp() {
-        return nohp;
-    }
-    public void setNohp(String nohp) {
-        this.nohp = nohp;
+    public String getId_penduduk() {
+        return id_penduduk;
     }
 
-    public String getKey() {
-        return key;
+    public void setNo_telpon(String no_telpon) {
+        this.no_telpon = no_telpon;
     }
-    public void setKey(String key) {
-        this.key = key;
+
+    public String getNo_telpon() {
+        return no_telpon;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

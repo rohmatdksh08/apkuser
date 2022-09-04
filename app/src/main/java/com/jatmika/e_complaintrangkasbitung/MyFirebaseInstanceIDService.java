@@ -23,27 +23,27 @@ public class MyFirebaseInstanceIDService extends FirebaseInstanceIdService {
     @Override
     public void onTokenRefresh() {
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
-        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot dataMahasiswa : dataSnapshot.getChildren()) {
-                                DataUser data = dataMahasiswa.getValue(DataUser.class);
-                                String email = (String) dataMahasiswa.child("email").getValue();
-
-                                String token = FirebaseInstanceId.getInstance().getToken();
-                                SUBSCRIBE_TO = email;
-                                Log.i(TAG, "onTokenRefresh completed with token: " + token);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+//        databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
+//        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                        if (dataSnapshot.exists()){
+//                            for (DataSnapshot dataMahasiswa : dataSnapshot.getChildren()) {
+//                                DataUser data = dataMahasiswa.getValue(DataUser.class);
+//                                String email = (String) dataMahasiswa.child("email").getValue();
+//
+//                                String token = FirebaseInstanceId.getInstance().getToken();
+//                                SUBSCRIBE_TO = email;
+//                                Log.i(TAG, "onTokenRefresh completed with token: " + token);
+//                            }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                    }
+//                });
     }
 }

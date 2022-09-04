@@ -582,17 +582,6 @@
                             android:textStyle="bold"
                             android:textSize="12sp"/>
 
-                        <Button
-                            android:id="@+id/btnHapus"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:background="@drawable/rounded_button_cornerbottom"
-                            android:text="Hapus Akun"
-                            android:textColor="#FFFFFF"
-                            android:textStyle="bold"
-                            android:textSize="12sp"/>
-
                     </LinearLayout>
                 </RelativeLayout>
 

@@ -13,9 +13,13 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import de.hdodenhof.circleimageview.CircleImageView;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import android.os.Handler;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,11 +53,15 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Objects;
 
@@ -72,6 +80,8 @@ public class FragmentProfile extends Fragment {
     FirebaseUser user;
     private StorageReference mStorage;
     DatabaseReference databaseReference;
+    API apiService;
+    SharePref sharePref;
 
     private String getKey, foto, nik, email, password, nama, ttl, jenkel, alamat, nohp, jenkelEdit, emailTopic;;
     private Context context;
@@ -110,10 +120,20 @@ public class FragmentProfile extends Fragment {
         ImageView btnEditAlamat = view.findViewById(R.id.btnEditAlamat);
         ImageView btnEditNohp = view.findViewById(R.id.btnEditNohp);
         Button btnLaporan = view.findViewById(R.id.btnPengaduan);
-        Button btnHapus = view.findViewById(R.id.btnHapus);
+        btnEditAlamat.setVisibility(View.GONE);
+        btnEditNama.setVisibility(View.GONE);
+        btnEditJenkel.setVisibility(View.GONE);
+        btnEditNohp.setVisibility(View.GONE);
+        btnEditAlamat.setVisibility(View.GONE);
+        btnEditNik.setVisibility(View.GONE);
+        btnEditTTL.setVisibility(View.GONE);
+        chooseBtn.setVisibility(View.GONE);
 
         mStorage = FirebaseStorage.getInstance().getReference("foto_user");
         databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
+
+        sharePref = new SharePref(getActivity().getApplicationContext());
+        apiService = APIUtility.getAPI();
 
         showProfile();
 
@@ -521,13 +541,6 @@ public class FragmentProfile extends Fragment {
             }
         });
 
-        btnHapus.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteAccount();
-            }
-        });
-
         return view;
     }
 
@@ -613,6 +626,27 @@ public class FragmentProfile extends Fragment {
     }
 
     private void showProfile(){
+        apiService.getProfie("Bearer "+sharePref.getTokenApi(), sharePref.getIdPenduduk().toString()).enqueue(new Callback<DataUser>() {
+            @Override
+            public void onResponse(Call<DataUser> call, Response<DataUser> response) {
+                Log.i("testAPI", response.toString());
+                tvNik.setText(response.body().getNik());
+                tvEmail.setText(response.body().getEmail());
+//                tvPassword.setText(password);
+                tvNama.setText(response.body().getNama_penduduk());
+                LocalDate ld = LocalDate.parse(response.body().getTanggal_lahir());
+                String ttl = response.body().getTempat_lahir()+", "+ld.getDayOfMonth()+" "+ld.getMonth()+" "+ld.getYear();
+                tvTTL.setText(ttl);
+                tvJenkel.setText(response.body().getJenis_kelamin());
+                tvAlamat.setText(response.body().getAlamat());
+                tvNohp.setText(response.body().getNo_telpon());
+            }
+
+            @Override
+            public void onFailure(Call<DataUser> call, Throwable t) {
+
+            }
+        });
 //        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
 //                .addListenerForSingleValueEvent(new ValueEventListener() {
 //                    @Override

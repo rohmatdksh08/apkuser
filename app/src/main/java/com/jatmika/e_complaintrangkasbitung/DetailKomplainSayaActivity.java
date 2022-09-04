@@ -48,12 +48,15 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterKomentar;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterProses;
 import com.jatmika.e_complaintrangkasbitung.Model.Komentar;
 import com.jatmika.e_complaintrangkasbitung.Model.MySingleton;
 import com.jatmika.e_complaintrangkasbitung.Model.Proses;
 import com.jatmika.e_complaintrangkasbitung.Model.Suka;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 import com.uncopt.android.widget.text.justify.JustifiedTextView;
 
 import org.json.JSONException;
@@ -67,6 +70,10 @@ import java.util.Map;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 import static android.text.TextUtils.isEmpty;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 public class DetailKomplainSayaActivity extends AppCompatActivity {
 
@@ -99,6 +106,8 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
 
     FirebaseAuth mAuth;
     FirebaseUser firebaseUser;
+    API apiService;
+    SharePref sharePref;
 
     int satuan;
 
@@ -141,6 +150,9 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        apiService = APIUtility.getAPI();
+        sharePref = new SharePref(this);
+
         Intent i = this.getIntent();
         image = i.getExtras().getString("IMAGE_KEY");
         berkas = i.getExtras().getString("BERKAS_KEY");
@@ -171,11 +183,11 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         tvJudul.startAnimation(fromright);
         linear2.setVisibility(View.GONE);
 
-        if(namalokasi.equals("Unknown") && latitude.equals("0.0") && longitude.equals("0.0")){
-            pembatas.setVisibility(View.GONE);
-            lokasi.setVisibility(View.GONE);
-            contentFrame.setVisibility(View.GONE);
-        }
+//        if(namalokasi.equals("Unknown") && latitude.equals("0.0") && longitude.equals("0.0")){
+//            pembatas.setVisibility(View.GONE);
+//            lokasi.setVisibility(View.GONE);
+//            contentFrame.setVisibility(View.GONE);
+//        }
 
         if (image.equals("")){
             relativeLayout.setVisibility(View.GONE);
@@ -194,8 +206,9 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         tanggalDetailTextView.setText(tanggal);
         isiDetailTextView.setText(isi);
         statusDetailTextView.setText(status);
+        String urlImage = "https://api-rohmat.kosanbahari.xyz/uploads/"+image;
         Glide.with(this)
-                .load(image)
+                .load(urlImage)
                 .into(fotoDetailImageView);
 
         fotoDetailImageView.setOnClickListener(new View.OnClickListener() {
@@ -207,7 +220,7 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
                 TextView btnClose = mView.findViewById(R.id.btnClose);
 
                 Glide.with(DetailKomplainSayaActivity.this)
-                        .load(image)
+                        .load(urlImage)
                         .into(imageView);
 
                 mBuilder.setView(mView);
@@ -223,11 +236,10 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
             }
         });
 
-        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").orderByChild("email")
-                .equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail()).addListenerForSingleValueEvent(new ValueEventListener() {
+        apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()) {
+            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                if(response.code() == 200) {
                     imageSuka.setVisibility(View.GONE);
                     tvStatusSuka.setText("Terima kasih telah menyukai ini");
                 } else {
@@ -237,36 +249,7 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                satuan = 1;
-                int jml_lihatlama = Integer.parseInt(jml_lihat);
-                final int total = satuan + jml_lihatlama;
-
-                if (dataSnapshot.exists()) {
-                    long totalSuka;
-                    totalSuka = (dataSnapshot.getChildrenCount());
-
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total));
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka));
-
-                } else {
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total));
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue("0");
-
-                    imageSuka.setVisibility(View.VISIBLE);
-                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
 
             }
         });
@@ -274,33 +257,21 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         imageSuka.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka")
-                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(new Suka(FirebaseAuth.getInstance().getCurrentUser().getEmail(),
-                        nama))
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
+                apiService.addLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                        if (response.code() == 200){
+                            linear1.setVisibility(View.VISIBLE);
+                            imageSuka.setVisibility(View.GONE);
+                            tvStatusSuka.setText("Terima kasih telah menyukai ini");
+                        }
+                    }
 
-                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                        if (dataSnapshot.exists()) {
-                                            long totalSuka;
-                                            totalSuka = (dataSnapshot.getChildrenCount());
-                                            FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka));
-                                        }
-                                    }
-                                    @Override
-                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
 
-                                    }
-                                });
-
-                                linear1.setVisibility(View.VISIBLE);
-                                imageSuka.setVisibility(View.GONE);
-                                tvStatusSuka.setText("Terima kasih telah menyukai ini");
-                            }
-                        });
+                    }
+                });
             }
         });
 
@@ -413,111 +384,43 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
                     mDialog.dismiss();
 
                 } else {
-                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey)
-                            .child("balasan").push().setValue(new Komentar(input.getText().toString(),
-                            namaDetailTextView.getText().toString(), email)).addOnSuccessListener(new OnSuccessListener<Void>() {
+//                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey)
+                    apiService.addComentar("Bearer "+sharePref.getTokenApi(), getKey, input.getText().toString()).enqueue(new Callback<Komentar>() {
                         @Override
-                        public void onSuccess(Void aVoid) {
-                            FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("balasan").addListenerForSingleValueEvent(new ValueEventListener() {
+                        public void onResponse(Call<Komentar> call, retrofit2.Response<Komentar> response) {
+                            Log.i("responseAPI", response.body().toString());
+                            linear2.setVisibility(View.GONE);
+                            input.setText("");
+                            btnTambahKomentar.setVisibility(View.VISIBLE);
+                            mDialog.dismiss();
+
+                            scrollView.postDelayed(new Runnable() {
                                 @Override
-                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                    if (dataSnapshot.exists()) {
-                                        long totalBalas;
-                                        totalBalas = (dataSnapshot.getChildrenCount());
-                                        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_balas").setValue(String.valueOf(totalBalas))
-                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                    @Override
-                                                    public void onSuccess(Void aVoid) {
-                                                        TOPIC = "/topics/komplain";
-                                                        NOTIFICATION_TITLE = "Balasan Komplain Diterima";
-                                                        NOTIFICATION_MESSAGE = "Dari : " +namaDetailTextView.getText().toString();
-
-                                                        JSONObject notification = new JSONObject();
-                                                        JSONObject notifcationBody = new JSONObject();
-                                                        try {
-                                                            notifcationBody.put("title", NOTIFICATION_TITLE);
-                                                            notifcationBody.put("message", NOTIFICATION_MESSAGE);
-
-                                                            notification.put("to", TOPIC);
-                                                            notification.put("data", notifcationBody);
-                                                        } catch (JSONException e) {
-                                                            Log.e(TAG, "onCreate: " + e.getMessage() );
-                                                        }
-                                                        sendNotification(notification);
-
-                                                        linear2.setVisibility(View.GONE);
-                                                        input.setText("");
-                                                        btnTambahKomentar.setVisibility(View.VISIBLE);
-                                                        mDialog.dismiss();
-
-                                                        scrollView.postDelayed(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                                                scrollView.isSmoothScrollingEnabled();
-                                                            }
-                                                        }, 200);
-                                                    }
-                                                });
-
-                                    } else {
-                                        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_balas").setValue("0")
-                                                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                                    @Override
-                                                    public void onSuccess(Void aVoid) {
-                                                        TOPIC = "/topics/komplain";
-                                                        NOTIFICATION_TITLE = "Balasan Komplain Diterima";
-                                                        NOTIFICATION_MESSAGE = "Dari : " +namaDetailTextView.getText().toString();
-
-                                                        JSONObject notification = new JSONObject();
-                                                        JSONObject notifcationBody = new JSONObject();
-                                                        try {
-                                                            notifcationBody.put("title", NOTIFICATION_TITLE);
-                                                            notifcationBody.put("message", NOTIFICATION_MESSAGE);
-
-                                                            notification.put("to", TOPIC);
-                                                            notification.put("data", notifcationBody);
-                                                        } catch (JSONException e) {
-                                                            Log.e(TAG, "onCreate: " + e.getMessage() );
-                                                        }
-                                                        sendNotification(notification);
-
-                                                        linear2.setVisibility(View.GONE);
-                                                        input.setText("");
-                                                        btnTambahKomentar.setVisibility(View.VISIBLE);
-                                                        mDialog.dismiss();
-
-                                                        scrollView.postDelayed(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                                                scrollView.isSmoothScrollingEnabled();
-                                                            }
-                                                        }, 200);
-                                                    }
-                                                });
-                                    }
+                                public void run() {
+                                    scrollView.fullScroll(ScrollView.FOCUS_DOWN);
+                                    scrollView.isSmoothScrollingEnabled();
                                 }
+                            }, 200);
+                            displayKomentar();
+                        }
 
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                }
-                            });
+                        @Override
+                        public void onFailure(Call<Komentar> call, Throwable t) {
+                            Log.i("responseAPI", t.toString());
                         }
                     });
                 }
             }
         });
 
-        Bundle bundle = new Bundle();
-        bundle.putString("namalokasi", String.valueOf(namalokasi));
-        bundle.putString("latitude", String.valueOf(latitude));
-        bundle.putString("longitude", String.valueOf(longitude));
-        bundle.putString("getKey", String.valueOf(getKey));
-        FragmentMap fragmentMap = new FragmentMap();
-        fragmentMap.setArguments(bundle);
-        getFragmentManager().beginTransaction().replace(R.id.content_frame, fragmentMap).commit();
+//        Bundle bundle = new Bundle();
+//        bundle.putString("namalokasi", String.valueOf(namalokasi));
+//        bundle.putString("latitude", String.valueOf(latitude));
+//        bundle.putString("longitude", String.valueOf(longitude));
+//        bundle.putString("getKey", String.valueOf(getKey));
+//        FragmentMap fragmentMap = new FragmentMap();
+//        fragmentMap.setArguments(bundle);
+//        getFragmentManager().beginTransaction().replace(R.id.content_frame, fragmentMap).commit();
 
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -529,12 +432,13 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         btnDokumen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (kategori.equals("Komplain IUMK")){
-                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-iumk"+nama, ".docx", DIRECTORY_DOWNLOADS, berkas);
-                } else if (kategori.equals("Komplain SPPT")){
-                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-sppt"+nama, ".docx", DIRECTORY_DOWNLOADS, berkas);
-                } else if (kategori.equals("Komplain Nikah")){
-                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-nikah"+nama, ".docx", DIRECTORY_DOWNLOADS, berkas);
+                String berkasUrl = "https://api-rohmat.kosanbahari.xyz/uploads/"+berkas;
+                if (kategori.equals("iumk")){
+                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-iumk"+nama, ".docx", DIRECTORY_DOWNLOADS, berkasUrl);
+                } else if (kategori.equals("SPPT")){
+                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-sppt"+nama, ".docx", DIRECTORY_DOWNLOADS, berkasUrl);
+                } else if (kategori.equals("surat nikah")){
+                    downloadFile(DetailKomplainSayaActivity.this, "dokumen-nikah"+nama, ".docx", DIRECTORY_DOWNLOADS, berkasUrl);
                 }
             }
         });
@@ -591,35 +495,26 @@ public class DetailKomplainSayaActivity extends AppCompatActivity {
         mAdapter = new RecyclerAdapterKomentar (DetailKomplainSayaActivity.this, mKomentar);
         mRecyclerView.setAdapter(mAdapter);
 
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("balasan");
-        mDBListener = mDatabaseRef.addValueEventListener(new ValueEventListener() {
+        apiService.getComentar("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<List<Komentar>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    mKomentar.clear();
-                    for (DataSnapshot komentarSnapshot : dataSnapshot.getChildren()) {
-                        Komentar upload = komentarSnapshot.getValue(Komentar.class);
-                        upload.setKey(komentarSnapshot.getKey());
-                        mKomentar.add(upload);
+            public void onResponse(Call<List<Komentar>> call, retrofit2.Response<List<Komentar>> response) {
+                Log.i("response", "code"+getKey);
+                if(response.code() == 200){
+                    for (Komentar komentar : response.body()){
+                        if(komentar != null)
+                            mKomentar.add(komentar);
                     }
                     mAdapter.notifyDataSetChanged();
                     tvBalas.setText("Balasan Komplain");
                     layout_kerangka.setVisibility(View.VISIBLE);
-
-                } else if (mAuth.getCurrentUser().getEmail().equals(email)
-                        || dataSnapshot.exists()){
-                    tvBalas.setText("Balasan Komplain");
-                    layout_kerangka.setVisibility(View.VISIBLE);
-
-                } else{
+                }else{
                     tvBalas.setText("Belum Ada Balasan");
-                    layout_kerangka.setVisibility(View.GONE);
+                    layout_kerangka.setVisibility(View.VISIBLE);
                 }
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(DetailKomplainSayaActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<Komentar>> call, Throwable t) {
+                Log.i("errorResponse", t.toString());
             }
         });
     }

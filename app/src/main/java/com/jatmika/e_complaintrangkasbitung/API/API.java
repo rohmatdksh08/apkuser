@@ -1,6 +1,7 @@
 package com.jatmika.e_complaintrangkasbitung.API;
 
 import com.jatmika.e_complaintrangkasbitung.Model.DataBerita;
+import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
 import com.jatmika.e_complaintrangkasbitung.Model.Komentar;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
 import com.jatmika.e_complaintrangkasbitung.Model.Penduduk;
@@ -28,6 +29,8 @@ public interface API {
     Call<TokenApi> login(@Field("email") String username, @Field("password") String password, @Field("device_name") String devices_name);
     @GET("/api/komplain/by/{kategori}")
     Call<List<Komplain>> getComplain(@Header("Authorization") String token, @Path("kategori") String kategori);
+    @GET("/api/komplain/pengguna/{id}")
+    Call<List<Komplain>> getComplainByPengguna(@Header("Authorization") String token, @Path("id") String id);
     @GET("/api/balasan/{idKomplain}")
     Call<List<Komentar>> getComentar(@Header("Authorization") String token, @Path("idKomplain") String idKomplain);
     @POST("/api/balasan")
@@ -66,4 +69,6 @@ public interface API {
     @POST("/api/berkas-komplain")
     Call<ResponseBody> postComplainBerkas(@Header("Authorization") String token, @Part("alamat") RequestBody alamat, @Part("isi") RequestBody isi, @Part("kategori")
             RequestBody kategori, @Part("status") RequestBody status, @Part("no_komplain") RequestBody no_komplain, @Part MultipartBody.Part berkas);
+    @GET("/api/pengguna/{id}")
+    Call<DataUser> getProfie(@Header("Authorization") String token, @Path("id") String id);
 }

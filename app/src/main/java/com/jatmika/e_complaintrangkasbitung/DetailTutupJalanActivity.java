@@ -179,7 +179,7 @@ public class DetailTutupJalanActivity extends AppCompatActivity {
         tanggalDetailTextView.setText(tanggal);
         isiDetailTextView.setText("''"+isi+"''");
         statusDetailtextView.setText(status);
-        String urlImage = "http://192.168.1.12:8000/uploads/"+image;
+        String urlImage = "https://api-rohmat.kosanbahari.xyz/uploads/"+image;
         Glide.with(this)
                 .load(urlImage)
                 .into(fotoDetailImageView);

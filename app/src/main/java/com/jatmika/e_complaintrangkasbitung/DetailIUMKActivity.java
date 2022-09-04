@@ -467,7 +467,7 @@ public class DetailIUMKActivity extends AppCompatActivity {
                 Log.i("pengguna", email);
                 Log.i("penggunaCache", sharePref.getIdPenduduk().toString());
                 if (email.equals(sharePref.getIdPenduduk().toString())){
-                    String berkasUrl = "http://192.168.1.12:8000/uploads/"+berkas;
+                    String berkasUrl = "https://api-rohmat.kosanbahari.xyz/uploads/"+berkas;
                     Log.i("berkas", berkasUrl);
                     downloadFile(DetailIUMKActivity.this, "dokumen-sppt-"+nama, ".docx", DIRECTORY_DOWNLOADS, berkasUrl);
                 } else {

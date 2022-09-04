@@ -22,11 +22,18 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterKomplain;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class KomplainSayaActivity extends AppCompatActivity implements RecyclerAdapterKomplain.OnItemClickListener {
 
@@ -37,6 +44,8 @@ public class KomplainSayaActivity extends AppCompatActivity implements RecyclerA
     TextView tvJudul;
     RelativeLayout btnBack;
     Animation fromright;
+    API apiService;
+    SharePref sharePref;
 
     private void openDetailKomplain(String[] data){
         Intent intent = new Intent(this, DetailKomplainSayaActivity.class);
@@ -76,6 +85,9 @@ public class KomplainSayaActivity extends AppCompatActivity implements RecyclerA
         fromright = AnimationUtils.loadAnimation(this, R.anim.fromright);
         tvJudul.startAnimation(fromright);
 
+        apiService = APIUtility.getAPI();
+        sharePref = new SharePref(this);
+
         RecyclerView mRecyclerView = findViewById(R.id.mRecyclerView);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -85,41 +97,19 @@ public class KomplainSayaActivity extends AppCompatActivity implements RecyclerA
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(this);
 
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_komplain");
-
-        mDatabaseRef.addValueEventListener(new ValueEventListener() {
+        apiService.getComplainByPengguna("Bearer "+sharePref.getTokenApi(), sharePref.getIdPenduduk().toString()).enqueue(new Callback<List<Komplain>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                Query query = mDatabaseRef.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail());
-                query.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            mPengaduans.clear();
-                            for (DataSnapshot komplainSnapshot : dataSnapshot.getChildren()) {
-                                Komplain upload = komplainSnapshot.getValue(Komplain.class);
-                                upload.setKey(komplainSnapshot.getKey());
-                                mPengaduans.add(upload);
-                            }
-                            mAdapter.notifyDataSetChanged();
-                            tvNoData.setVisibility(View.GONE);
-                        } else {
-                            tvNoData.setVisibility(View.VISIBLE);
-                            tvNoData.setText("Belum Ada Komplain");
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+            public void onResponse(Call<List<Komplain>> call, Response<List<Komplain>> response) {
+                for (Komplain komplain : response.body()){
+                    mPengaduans.add(komplain);
+                }
+                mAdapter.notifyDataSetChanged();
+                tvNoData.setVisibility(View.GONE);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(KomplainSayaActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<Komplain>> call, Throwable t) {
+
             }
         });
 

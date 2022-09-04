@@ -190,12 +190,12 @@ public class TambahKomplainIUMKActivity extends AppCompatActivity {
                         totalBaru = satuan + totalData;
 
                         if (totalBaru > 9) {
-                            edNomor.setText("411.3/" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
+                            edNomor.setText("411.3/" + String.valueOf(totalBaru) + "/RancaBango/" + sdf2.format(myCalendar.getTime()));
                         } else {
-                            edNomor.setText("411.3/0" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
+                            edNomor.setText("411.3/0" + String.valueOf(totalBaru) + "/RancaBango/" + sdf2.format(myCalendar.getTime()));
                         }
                     } else {
-                        edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        edNomor.setText("411.3/01/RancaBango/"+sdf2.format(myCalendar.getTime()));
                     }
                 }
             }
