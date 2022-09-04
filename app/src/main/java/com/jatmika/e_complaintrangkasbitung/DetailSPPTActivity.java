@@ -480,7 +480,7 @@ public class DetailSPPTActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Log.i("pengguna", email);
-                Log.i("penggunaCache", sharePref.getIdPenduduk().toString());
+                Log.i(  "penggunaCache", sharePref.getIdPenduduk().toString());
                 if (email.equals(sharePref.getIdPenduduk().toString())){
                     String berkasUrl = "http://192.168.216.94:8000/uploads/"+berkas;
                     Log.i("berkas", berkasUrl);
