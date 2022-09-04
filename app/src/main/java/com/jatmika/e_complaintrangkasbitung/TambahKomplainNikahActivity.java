@@ -40,9 +40,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Model.DataUser;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
 import com.jatmika.e_complaintrangkasbitung.Model.MySingleton;
+import com.jatmika.e_complaintrangkasbitung.Model.Penduduk;
 import com.jatmika.e_complaintrangkasbitung.Model.PersentaseKomplain;
 import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
@@ -56,6 +58,7 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static android.text.TextUtils.isEmpty;
@@ -136,6 +139,9 @@ public class TambahKomplainNikahActivity extends AppCompatActivity {
         tvJudul.startAnimation(fromright);
 
         myCalendar = Calendar.getInstance();
+
+        apiService = APIUtility.getAPI();
+        sharePref = new SharePref(this);
         String myFormat = "dd MMMM yyyy";
         final SimpleDateFormat sdf = new SimpleDateFormat(myFormat);
         String myFormat2 = "yyyy";
@@ -146,54 +152,45 @@ public class TambahKomplainNikahActivity extends AppCompatActivity {
         firebaseUser = mAuth.getCurrentUser();
 
         databaseReference = FirebaseDatabase.getInstance().getReference("data_user");
-        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot dataUser : dataSnapshot.getChildren()) {
-                                DataUser data = dataUser.getValue(DataUser.class);
-                                final String getKey = (String) dataUser.getKey();
-                                String nik = (String) dataUser.child("nik").getValue();
-                                String email2 = (String) dataUser.child("email").getValue();
-                                String nama = (String) dataUser.child("nama").getValue();
-                                String alamat = (String) dataUser.child("alamat").getValue();
 
-                                edNik.setText(nik);
-                                email = email2;
-                                edNama.setText(nama);
-                                edAlamat.setText(alamat);
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-
-        FirebaseDatabase.getInstance().getReference("data_komplain").addListenerForSingleValueEvent(new ValueEventListener() {
+        apiService.getPenduduk("Bearer "+sharePref.getTokenApi(), sharePref.getIdPenduduk()).enqueue(new Callback<Penduduk>() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(dataSnapshot.exists()){
-                    int satuan = 1;
-                    long totalData;
-                    totalData = dataSnapshot.getChildrenCount();
-                    totalBaru = satuan + totalData;
+            public void onResponse(Call<Penduduk> call, retrofit2.Response<Penduduk> response) {
+                Log.i("responseAPI", response.toString());
+                edNik.setText(response.body().getNik().toString());
+                edNama.setText(response.body().getNama_penduduk());
+                edAlamat.setText(response.body().getAlamat());
+            }
 
-                    if(totalBaru > 9){
-                        edNomor.setText("411.3/"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+            @Override
+            public void onFailure(Call<Penduduk> call, Throwable t) {
+
+            }
+        });
+
+        apiService.getComplain("Bearer "+sharePref.getTokenApi(), "all").enqueue(new Callback<List<Komplain>>() {
+            @Override
+            public void onResponse(Call<List<Komplain>> call, retrofit2.Response<List<Komplain>> response) {
+                if(response.code() == 200){
+                    if(response.body().size() > 0) {
+                        int satuan = 1;
+                        long totalData;
+                        totalData = response.body().size();
+                        totalBaru = satuan + totalData;
+
+                        if (totalBaru > 9) {
+                            edNomor.setText("411.3/" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
+                        } else {
+                            edNomor.setText("411.3/0" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
+                        }
                     } else {
-                        edNomor.setText("411.3/0"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
                     }
-                } else {
-                    edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
                 }
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+            public void onFailure(Call<List<Komplain>> call, Throwable t) {
 
             }
         });
@@ -384,7 +381,7 @@ public class TambahKomplainNikahActivity extends AppCompatActivity {
                 || isEmpty(edAlamat.getText().toString()) || isEmpty(edTanggal.getText().toString()) || isEmpty(edIsi.getText().toString())) {
             Toast.makeText(this, "Data tidak boleh kosong!", Toast.LENGTH_SHORT).show();
 
-        } else if (mImageUri == null) {
+        } else{
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(TambahKomplainNikahActivity.this);
             View mView = getLayoutInflater().inflate(R.layout.show_loading, null);
 

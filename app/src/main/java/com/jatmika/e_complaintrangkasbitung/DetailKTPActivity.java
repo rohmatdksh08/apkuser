@@ -179,7 +179,7 @@ public class DetailKTPActivity extends AppCompatActivity {
         tanggalDetailTextView.setText(tanggal);
         isiDetailTextView.setText("''"+isi+"''");
         statusDetailtextView.setText(status);
-        String urlImage = "http://192.168.216.94:8000/uploads/"+image;
+        String urlImage = "http://192.168.126.94:8000/uploads/"+image;
         Glide.with(this)
                 .load(urlImage)
                 .into(fotoDetailImageView);

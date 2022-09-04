@@ -245,219 +245,41 @@ public class DetailTutupJalanActivity extends AppCompatActivity {
 
                     }
                 });
+            }
+        });
+    }
 
+    private void displayKomentar() {
+        mRecyclerView = findViewById(R.id.list_of_komentar);
+        RecyclerView.LayoutManager layoutManager = new FlexboxLayoutManager(this);
+        mRecyclerView.setLayoutManager(layoutManager);
 
-                relative1.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (status.equals("Menunggu Diproses")) {
-                            AlertDialog.Builder mBuilder = new AlertDialog.Builder(DetailTutupJalanActivity.this);
-                            View mView = getLayoutInflater().inflate(R.layout.show_menunggu, null);
-                            TextView btnClose = mView.findViewById(R.id.btnClose);
-                            TextView tvNomor = mView.findViewById(R.id.tvNomor);
+        mKomentar = new ArrayList<>();
+        mAdapter = new RecyclerAdapterKomentar (DetailTutupJalanActivity.this, mKomentar);
+        mRecyclerView.setAdapter(mAdapter);
 
-                            mBuilder.setView(mView);
-                            final AlertDialog mDialog = mBuilder.create();
-                            mDialog.show();
-
-                            tvNomor.setText("No : " + nomor);
-                            btnClose.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    mDialog.dismiss();
-                                }
-                            });
-
-                        } else {
-                            AlertDialog.Builder mBuilder = new AlertDialog.Builder(DetailTutupJalanActivity.this);
-                            View mView = getLayoutInflater().inflate(R.layout.show_proses, null);
-
-                            TextView btnClose = mView.findViewById(R.id.btnClose);
-                            TextView tvNomor = mView.findViewById(R.id.tvNomor);
-                            TextView tvStatus = mView.findViewById(R.id.tvStatus);
-                            RecyclerView mRecyclerView = mView.findViewById(R.id.mRecyclerView);
-                            final RecyclerAdapterProses mAdapter;
-                            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("status_komplain");
-                            final List<Proses> mProsess;
-
-                            mBuilder.setView(mView);
-                            final AlertDialog mDialog = mBuilder.create();
-                            mDialog.show();
-
-                            mRecyclerView.setHasFixedSize(true);
-                            mRecyclerView.setLayoutManager(new LinearLayoutManager(DetailTutupJalanActivity.this));
-
-                            mProsess = new ArrayList<>();
-                            mAdapter = new RecyclerAdapterProses(DetailTutupJalanActivity.this, mProsess);
-                            mRecyclerView.setAdapter(mAdapter);
-
-                            mDBListener = databaseReference.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-
-                                    mProsess.clear();
-                                    for (DataSnapshot prosesSnapshot : dataSnapshot.getChildren()) {
-                                        Proses upload = prosesSnapshot.getValue(Proses.class);
-                                        upload.setKey(prosesSnapshot.getKey());
-                                        mProsess.add(upload);
-                                    }
-                                    mAdapter.notifyDataSetChanged();
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                    Toast.makeText(DetailTutupJalanActivity.this, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
-                                }
-                            });
-
-                            tvStatus.setText(status);
-                            tvNomor.setText("No : " + nomor);
-                            btnClose.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    mDialog.dismiss();
-                                }
-                            });
-                        }
+        apiService.getComentar("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<List<Komentar>>() {
+            @Override
+            public void onResponse(Call<List<Komentar>> call, retrofit2.Response<List<Komentar>> response) {
+                Log.i("response", "code"+getKey);
+                if(response.code() == 200){
+                    for (Komentar komentar : response.body()){
+                        if(komentar != null)
+                            mKomentar.add(komentar);
                     }
-                });
-
-                btnTambahKomentar.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final ScrollView scrollView = findViewById(R.id.scrollView);
-                        btnTambahKomentar.setVisibility(View.GONE);
-                        scrollView.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                scrollView.isSmoothScrollingEnabled();
-                            }
-                        }, 200);
-                        linear2.setVisibility(View.VISIBLE);
-                    }
-                });
-
-                fab.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        final EditText input = findViewById(R.id.input);
-                        final ScrollView scrollView = findViewById(R.id.scrollView);
-
-                        AlertDialog.Builder mBuilder = new AlertDialog.Builder(DetailTutupJalanActivity.this);
-                        View mView = getLayoutInflater().inflate(R.layout.show_loading, null);
-
-                        mBuilder.setView(mView);
-                        mBuilder.setCancelable(false);
-                        final AlertDialog mDialog = mBuilder.create();
-                        mDialog.show();
-
-                        if (isEmpty(input.getText().toString())) {
-                            Toast.makeText(DetailTutupJalanActivity.this, "Balasan tidak boleh kosong!",
-                                    Toast.LENGTH_SHORT).show();
-                            mDialog.dismiss();
-
-                        } else {
-                            apiService.addComentar("Bearer " + sharePref.getTokenApi(), getKey, input.getText().toString()).enqueue(new Callback<Komentar>() {
-                                @Override
-                                public void onResponse(Call<Komentar> call, retrofit2.Response<Komentar> response) {
-                                    Log.i("responseAPI", response.body().toString());
-                                    linear2.setVisibility(View.GONE);
-                                    input.setText("");
-                                    btnTambahKomentar.setVisibility(View.VISIBLE);
-                                    mDialog.dismiss();
-
-                                    scrollView.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            scrollView.fullScroll(ScrollView.FOCUS_DOWN);
-                                            scrollView.isSmoothScrollingEnabled();
-                                        }
-                                    }, 200);
-                                    displayKomentar();
-                                }
-
-                                @Override
-                                public void onFailure(Call<Komentar> call, Throwable t) {
-                                    Log.i("responseAPI", t.toString());
-                                }
-                            });
-                        }
-                    }
-                });
-
-                btnBack.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        finish();
-                    }
-                });
+                    mAdapter.notifyDataSetChanged();
+                    tvBalas.setText("Balasan Komplain");
+                    layout_kerangka.setVisibility(View.VISIBLE);
+                }else{
+                    tvBalas.setText("Belum Ada Balasan");
+                    layout_kerangka.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
-            public void onBackPressed() {
-                finish();
+            public void onFailure(Call<List<Komentar>> call, Throwable t) {
+                Log.i("errorResponse", t.toString());
             }
-
-            private void sendNotification(JSONObject notification) {
-                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(FCM_API, notification,
-                        new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Log.i(TAG, "onResponse: " + response.toString());
-                            }
-                        },
-                        new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(DetailTutupJalanActivity.this, "Request error!", Toast.LENGTH_LONG).show();
-                                Log.i(TAG, "onErrorResponse: Didn't work");
-                            }
-                        }) {
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        Map<String, String> params = new HashMap<>();
-                        params.put("Authorization", serverKey);
-                        params.put("Content-Type", contentType);
-                        return params;
-                    }
-                };
-                MySingleton.getInstance(getApplicationContext()).addToRequestQueue(jsonObjectRequest);
-            }
-
-            private void displayKomentar() {
-                mRecyclerView = findViewById(R.id.list_of_komentar);
-                RecyclerView.LayoutManager layoutManager = new FlexboxLayoutManager(this);
-                mRecyclerView.setLayoutManager(layoutManager);
-
-                mKomentar = new ArrayList<>();
-                mAdapter = new RecyclerAdapterKomentar (DetailTutupJalanActivity.this, mKomentar);
-                mRecyclerView.setAdapter(mAdapter);
-
-                apiService.getComentar("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<List<Komentar>>() {
-                    @Override
-                    public void onResponse(Call<List<Komentar>> call, retrofit2.Response<List<Komentar>> response) {
-                        Log.i("response", "code"+getKey);
-                        if(response.code() == 200){
-                            for (Komentar komentar : response.body()){
-                                if(komentar != null)
-                                    mKomentar.add(komentar);
-                            }
-                            mAdapter.notifyDataSetChanged();
-                            tvBalas.setText("Balasan Komplain");
-                            layout_kerangka.setVisibility(View.VISIBLE);
-                        }else{
-                            tvBalas.setText("Belum Ada Balasan");
-                            layout_kerangka.setVisibility(View.VISIBLE);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<Komentar>> call, Throwable t) {
-                        Log.i("errorResponse", t.toString());
-                    }
-                });
-            }
-        }
+        });
     }
 }

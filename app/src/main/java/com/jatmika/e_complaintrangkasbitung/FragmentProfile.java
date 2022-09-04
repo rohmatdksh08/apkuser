@@ -507,12 +507,12 @@ public class FragmentProfile extends Fragment {
             }
         });
 
-        chooseBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openFileChooser();
-            }
-        });
+//        chooseBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                openFileChooser();
+//            }
+//        });
 
         btnLaporan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -613,45 +613,45 @@ public class FragmentProfile extends Fragment {
     }
 
     private void showProfile(){
-        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot dataUser : dataSnapshot.getChildren()) {
-                                DataUser data = dataUser.getValue(DataUser.class);
-                                getKey = (String) dataUser.getKey();
-                                foto = (String) dataUser.child("photo").getValue();
-                                nik = (String) dataUser.child("nik").getValue();
-                                email = (String) dataUser.child("email").getValue();
-                                password = (String) dataUser.child("password").getValue();
-                                nama = (String) dataUser.child("nama").getValue();
-                                ttl = (String) dataUser.child("ttl").getValue();
-                                jenkel = (String) dataUser.child("jenkel").getValue();
-                                alamat = (String) dataUser.child("alamat").getValue();
-                                nohp = (String) dataUser.child("nohp").getValue();
-
-                                Glide.with(FragmentProfile.this.context).load(foto).into(fotoProfile);
-                                tvNik.setText(nik);
-                                tvEmail.setText(email);
-                                tvPassword.setText(password);
-                                tvNama.setText(nama);
-                                tvTTL.setText(ttl);
-                                tvJenkel.setText(jenkel);
-                                tvAlamat.setText(alamat);
-                                tvNohp.setText(nohp);
-
-                                emailTopic = email;
-                                emailTopic = emailTopic.replaceAll("[@.-]", "");
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+//        databaseReference.orderByChild("email").equalTo(FirebaseAuth.getInstance().getCurrentUser().getEmail())
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                        if (dataSnapshot.exists()){
+//                            for (DataSnapshot dataUser : dataSnapshot.getChildren()) {
+//                                DataUser data = dataUser.getValue(DataUser.class);
+//                                getKey = (String) dataUser.getKey();
+//                                foto = (String) dataUser.child("photo").getValue();
+//                                nik = (String) dataUser.child("nik").getValue();
+//                                email = (String) dataUser.child("email").getValue();
+//                                password = (String) dataUser.child("password").getValue();
+//                                nama = (String) dataUser.child("nama").getValue();
+//                                ttl = (String) dataUser.child("ttl").getValue();
+//                                jenkel = (String) dataUser.child("jenkel").getValue();
+//                                alamat = (String) dataUser.child("alamat").getValue();
+//                                nohp = (String) dataUser.child("nohp").getValue();
+//
+//                                Glide.with(FragmentProfile.this.context).load(foto).into(fotoProfile);
+//                                tvNik.setText(nik);
+//                                tvEmail.setText(email);
+//                                tvPassword.setText(password);
+//                                tvNama.setText(nama);
+//                                tvTTL.setText(ttl);
+//                                tvJenkel.setText(jenkel);
+//                                tvAlamat.setText(alamat);
+//                                tvNohp.setText(nohp);
+//
+//                                emailTopic = email;
+//                                emailTopic = emailTopic.replaceAll("[@.-]", "");
+//                            }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                    }
+//                });
     }
 
     private void deleteAccount() {

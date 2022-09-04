@@ -113,7 +113,7 @@ public class DetailBeritaActivity extends AppCompatActivity {
         tanggalDetailTextView.setText(tanggal);
         penulisDetailTextView.setText(penulis);
         beritaDetailTextView.setText(berita);
-        String urlImage = "http://192.168.216.94:8000/uploads/"+image;
+        String urlImage = "http://192.168.126.94:8000/uploads/"+image;
         Glide.with(this)
                 .load(urlImage)
                 .into(fotoDetailImageView);
