@@ -46,7 +46,7 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
     private RecyclerAdapter mAdapter;
     private ProgressBar mProgressBar;
     private FirebaseStorage mStorage;
-    DatabaseReference mDatabaseRef;
+    private DatabaseReference mDatabaseRef;
     private ValueEventListener mDBListener;
     private List<DataBerita> mPengaduans;
     SharePref sharePref;
@@ -92,7 +92,7 @@ public class FragmentBerita extends Fragment implements RecyclerAdapter.OnItemCl
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.setOnItemClickListener(this);
 
-        mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_berita");
+//        mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_berita");
         apiService.getBerita("Bearer "+sharePref.getTokenApi()).enqueue(new Callback<List<DataBerita>>() {
             @Override
             public void onResponse(Call<List<DataBerita>> call, Response<List<DataBerita>> response) {

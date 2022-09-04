@@ -3,7 +3,27 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="app/src/main/res/layout/activity_register.xml" value="0.182518115942029" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_detail_berita.xml" value="0.182518115942029" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_detail_infrastruktur.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_developer.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_kategori.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_kecamatan.xml" value="0.1" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_komplain_saya.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_login.xml" value="0.182518115942029" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_splash.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_tambah_komplain_infrastruktur.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/activity_tambah_komplain_ktp.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/app_bar_kecamatan.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/app_bar_main.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/app_bar_tambah_sppt.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/fragment_berita.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/fragment_complaint.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/fragment_iumk.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/fragment_profile.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/show_edit_profile.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/layout/show_image.xml" value="0.182518115942029" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/menu/activity_main_drawer.xml" value="0.25" />
+        <entry key="..\:/Users/Rohmat/Documents/Skirpsi/MKB App/MKB App/app/src/main/res/menu/main.xml" value="0.25" />
       </map>
     </option>
   </component>

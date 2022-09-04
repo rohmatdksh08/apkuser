@@ -1,6 +1,7 @@
 package com.jatmika.e_complaintrangkasbitung;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -9,6 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,22 +23,33 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.jatmika.e_complaintrangkasbitung.API.API;
+import com.jatmika.e_complaintrangkasbitung.API.APIUtility;
 import com.jatmika.e_complaintrangkasbitung.Adapter.RecyclerAdapterKomplain;
 import com.jatmika.e_complaintrangkasbitung.Model.Komplain;
+import com.jatmika.e_complaintrangkasbitung.SharePref.SharePref;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 /**
  * A simple {@link Fragment} subclass.
  */
 public class FragmentIUMK extends Fragment implements RecyclerAdapterKomplain.OnItemClickListener {
 
     private RecyclerAdapterKomplain mAdapter;
+    private FirebaseStorage mStorage;
     private DatabaseReference mDatabaseRef;
     private List<Komplain> mPengaduans;
     private TextView tvNoData;
+    private Context context;
+
+    private SharePref sharePref;
+    private API apiService;
 
     private void openDetailKomplainIUMK(String[] data){
         Intent intent = new Intent(getActivity(), DetailIUMKActivity.class);
@@ -61,6 +74,9 @@ public class FragmentIUMK extends Fragment implements RecyclerAdapterKomplain.On
         startActivity(intent);
     }
 
+    private String jumlahKomplainIUMK, jumlahKomplainKependudukan, jumlahKomplainKTP,
+            jumlahKomplainNikah, jumlahKomplainSPPT, jumlahKomplainTutupJalan;
+
 
     public FragmentIUMK() {
         // Required empty public constructor
@@ -72,6 +88,11 @@ public class FragmentIUMK extends Fragment implements RecyclerAdapterKomplain.On
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_iumk, container, false);
+
+        context = getActivity().getApplicationContext();
+        sharePref = new SharePref(context);
+        apiService = APIUtility.getAPI();
+
 
         tvNoData = view.findViewById(R.id.tvNoData);
         RecyclerView mRecyclerView = view.findViewById(R.id.mRecyclerView);
@@ -85,39 +106,21 @@ public class FragmentIUMK extends Fragment implements RecyclerAdapterKomplain.On
 
         mDatabaseRef = FirebaseDatabase.getInstance().getReference("data_komplain");
 
-        mDatabaseRef.addValueEventListener(new ValueEventListener() {
+//        mDatabaseRef.addValueEventListener(new ValueEventListener() {
+        apiService.getComplain("Bearer "+sharePref.getTokenApi(), "iumk").enqueue(new Callback<List<Komplain>>() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-
-                Query query = mDatabaseRef.orderByChild("kategori").equalTo("Komplain IUMK");
-                query.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            mPengaduans.clear();
-                            for (DataSnapshot komplainSnapshot : dataSnapshot.getChildren()) {
-                                Komplain upload = komplainSnapshot.getValue(Komplain.class);
-                                upload.setKey(komplainSnapshot.getKey());
-                                mPengaduans.add(upload);
-                            }
-                            mAdapter.notifyDataSetChanged();
-                            tvNoData.setVisibility(View.GONE);
-                        } else {
-                            tvNoData.setVisibility(View.VISIBLE);
-                            tvNoData.setText("Belum Ada Komplain");
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+            public void onResponse(Call<List<Komplain>> call, Response<List<Komplain>> response) {
+                Log.i("response", response.body().toString());
+                for (Komplain komplain : response.body()){
+                    mPengaduans.add(komplain);
+                }
+                mAdapter.notifyDataSetChanged();
+                tvNoData.setVisibility(View.GONE);
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getActivity(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<Komplain>> call, Throwable t) {
+                Log.i("responseError", t.toString());
             }
         });
 

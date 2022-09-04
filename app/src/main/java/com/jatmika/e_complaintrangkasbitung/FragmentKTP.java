@@ -48,8 +48,8 @@ public class FragmentKTP extends Fragment implements RecyclerAdapterKomplain.OnI
     private TextView tvNoData;
     private Context context;
 
-    SharePref sharePref;
-    API apiService;
+    private SharePref sharePref;
+    private API apiService;
 
     private void openDetailKomplainKTP(String[] data){
         Intent intent = new Intent(getActivity(), DetailKTPActivity.class);

@@ -42,7 +42,7 @@
                     android:layout_gravity="center"
                     android:gravity="start|center"
                     android:textStyle="bold"
-                    android:text="Seputar Desa Mekar Baru"
+                    android:text="Seputar Desa Rancabango"
                     android:textSize="18sp"
                     android:textColor="#FCFAFA"
                     android:singleLine="true"/>

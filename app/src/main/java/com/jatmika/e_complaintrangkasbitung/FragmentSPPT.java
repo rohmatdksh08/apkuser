@@ -1,6 +1,7 @@
 package com.jatmika.e_complaintrangkasbitung;
 
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -45,6 +46,7 @@ public class FragmentSPPT extends Fragment implements RecyclerAdapterKomplain.On
     private DatabaseReference mDatabaseRef;
     private List<Komplain> mPengaduans;
     private TextView tvNoData;
+    private Context context;
     SharePref sharePref;
     API apiService;
 
@@ -83,6 +85,8 @@ public class FragmentSPPT extends Fragment implements RecyclerAdapterKomplain.On
         View view = inflater.inflate(R.layout.fragment_sppt, container, false);
 
         tvNoData = view.findViewById(R.id.tvNoData);
+        context = getActivity().getApplicationContext();
+
         RecyclerView mRecyclerView = view.findViewById(R.id.mRecyclerView);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

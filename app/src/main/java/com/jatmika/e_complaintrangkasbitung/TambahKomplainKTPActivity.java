@@ -168,16 +168,16 @@ public class TambahKomplainKTPActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Komplain>> call, retrofit2.Response<List<Komplain>> response) {
                 if(response.code() == 200){
-                    if(response.body().size() > 0){
+                    if(response.body().size() > 0) {
                         int satuan = 1;
                         long totalData;
                         totalData = response.body().size();
                         totalBaru = satuan + totalData;
 
-                        if(totalBaru > 9){
-                            edNomor.setText("411.3/"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                        if (totalBaru > 9) {
+                            edNomor.setText("411.3/" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
                         } else {
-                            edNomor.setText("411.3/0"+String.valueOf(totalBaru)+"/MekarBaru/"+sdf2.format(myCalendar.getTime()));
+                            edNomor.setText("411.3/0" + String.valueOf(totalBaru) + "/MekarBaru/" + sdf2.format(myCalendar.getTime()));
                         }
                     } else {
                         edNomor.setText("411.3/01/MekarBaru/"+sdf2.format(myCalendar.getTime()));
@@ -448,8 +448,8 @@ public class TambahKomplainKTPActivity extends AppCompatActivity {
                     Log.i("checkUpload", response.toString());
                     if (response.code() == 200){
                         Toast.makeText(TambahKomplainKTPActivity.this, "Komplain berhasil dikirim!", Toast.LENGTH_LONG).show();
-                                                                mDialog.dismiss();
-                                                                startActivity(new Intent(TambahKomplainKTPActivity.this, MainActivity.class));
+                        mDialog.dismiss();
+                        startActivity(new Intent(TambahKomplainKTPActivity.this, MainActivity.class));
                     }
                 }
 
