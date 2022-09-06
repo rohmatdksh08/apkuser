@@ -1,6 +1,7 @@
 package com.jatmika.e_complaintrangkasbitung;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,6 +44,7 @@ public  class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.Recyc
         holder.penulisTextView.setText(currentBerita.getnama());
         holder.isiTextView.setText(currentBerita.getisi());
         String urlImage = "https://api-rohmat.kosanbahari.xyz/uploads/"+currentBerita.getFoto();
+        Log.i("imageBerita", urlImage);
         Glide.with(mContext)
                 .load(urlImage)
                 .into(holder.fotoImageView);

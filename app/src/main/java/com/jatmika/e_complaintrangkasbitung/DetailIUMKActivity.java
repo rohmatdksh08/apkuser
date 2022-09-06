@@ -193,101 +193,6 @@ public class DetailIUMKActivity extends AppCompatActivity {
         sharePref = new SharePref(this);
         displayKomentar();
 
-//        FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                satuan = 1;
-//                int jml_lihatlama = Integer.parseInt(jml_lihat);
-//                final int total = satuan + jml_lihatlama;
-//
-//                if (dataSnapshot.exists()) {
-//                    final long totalSuka;
-//                    totalSuka = (dataSnapshot.getChildrenCount());
-//
-//                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
-//                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                @Override
-//                                public void onSuccess(Void aVoid) {
-//                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka));
-//                                }
-//                            });
-//                } else {
-//                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_lihat").setValue(String.valueOf(total))
-//                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                @Override
-//                                public void onSuccess(Void aVoid) {
-//                                    FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue("0")
-//                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                                @Override
-//                                                public void onSuccess(Void aVoid) {
-//                                                    imageSuka.setVisibility(View.VISIBLE);
-//                                                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
-//                                                }
-//                                            });
-//                                }
-//                            });
-//                }
-//            }
-
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        });
-
-//        imageSuka.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka")
-//                        .child(FirebaseAuth.getInstance().getCurrentUser().getUid()).setValue(new Suka(FirebaseAuth.getInstance().getCurrentUser().getEmail(),
-//                        nama))
-//                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                            @Override
-//                            public void onSuccess(Void aVoid) {
-//                                FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("suka").addListenerForSingleValueEvent(new ValueEventListener() {
-//                                    @Override
-//                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                                        if (dataSnapshot.exists()) {
-//                                            long totalSuka;
-//                                            totalSuka = (dataSnapshot.getChildrenCount());
-//                                            FirebaseDatabase.getInstance().getReference("data_komplain").child(getKey).child("jml_suka").setValue(String.valueOf(totalSuka))
-//                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                                        @Override
-//                                                        public void onSuccess(Void aVoid) {
-//                                                            linear1.setVisibility(View.VISIBLE);
-//                                                            imageSuka.setVisibility(View.GONE);
-//                                                            tvStatusSuka.setText("Terima kasih telah menyukai ini");
-//                                                        }
-//                                                    });
-//                                        }
-//                                    }
-//                                    @Override
-//                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//                                    }
-//                                });
-//                            }
-//                        });
-//            }
-//        });
-
-        apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                if(response.code() == 200) {
-                    imageSuka.setVisibility(View.GONE);
-                    tvStatusSuka.setText("Terima kasih telah menyukai ini");
-                } else {
-                    imageSuka.setVisibility(View.VISIBLE);
-                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-
-            }
-        });
 
         imageSuka.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -310,11 +215,33 @@ public class DetailIUMKActivity extends AppCompatActivity {
             }
         });
 
-//        if (mAuth.getCurrentUser().getEmail().equals(emailDetailTextView.getText().toString())) {
-//            btnTambahKomentar.setVisibility(View.VISIBLE);
-//        } else {
-//            btnTambahKomentar.setVisibility(View.GONE);
-//        }
+        if (sharePref.getStatusLogin() == true) {
+            btnTambahKomentar.setVisibility(View.VISIBLE);
+            tvStatusSuka.setVisibility(View.VISIBLE);
+            btnDokumen.setVisibility(View.VISIBLE);
+            apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                    if(response.code() == 200) {
+                        imageSuka.setVisibility(View.GONE);
+                        tvStatusSuka.setText("Terima kasih telah menyukai ini");
+                    } else {
+                        imageSuka.setVisibility(View.VISIBLE);
+                        tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
+        } else {
+            btnTambahKomentar.setVisibility(View.GONE);
+            imageSuka.setVisibility(View.GONE);
+            tvStatusSuka.setVisibility(View.GONE);
+            btnDokumen.setVisibility(View.GONE);
+        }
 
         relative1.setOnClickListener(new View.OnClickListener() {
             @Override

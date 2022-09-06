@@ -80,11 +80,16 @@ public class MainActivity extends AppCompatActivity
                     fragmentTransaction2.commit();
                     return true;
                 case R.id.navigation_notifications:
-                    FragmentProfile profilFragment = new FragmentProfile();
-                    tvJudul.setText("Profil Saya");
-                    FragmentTransaction fragmentTransaction3 = getSupportFragmentManager().beginTransaction();
-                    fragmentTransaction3.replace(R.id.content, profilFragment);
-                    fragmentTransaction3.commit();
+                    if(sharePref.getStatusLogin() == false){
+                        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+                        startActivity(i);
+                    }else{
+                        FragmentProfile profilFragment = new FragmentProfile();
+                        tvJudul.setText("Profil Saya");
+                        FragmentTransaction fragmentTransaction3 = getSupportFragmentManager().beginTransaction();
+                        fragmentTransaction3.replace(R.id.content, profilFragment);
+                        fragmentTransaction3.commit();
+                    }
                     return true;
             }
             return false;
@@ -99,9 +104,6 @@ public class MainActivity extends AppCompatActivity
         mAuth = FirebaseAuth.getInstance();
         sharePref = new SharePref(this);
         apiService = APIUtility.getAPI();
-        if(sharePref.getStatusLogin() == false) {
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
-        }
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -117,6 +119,22 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        if(sharePref.getStatusLogin() == false){
+            for (int menuItemIndex = 0; menuItemIndex < menu.size(); menuItemIndex++) {
+                MenuItem menuItem= menu.getItem(menuItemIndex);
+                if(menuItem.getItemId() == R.id.nav_logout || menuItem.getItemId() == R.id.nav_kategori){
+                    menuItem.setVisible(false);
+                }
+            }
+        }else{
+            for (int menuItemIndex = 0; menuItemIndex < menu.size(); menuItemIndex++) {
+                MenuItem menuItem= menu.getItem(menuItemIndex);
+                if(menuItem.getItemId() == R.id.login){
+                    menuItem.setVisible(false);
+                }
+            }
+        }
         navigationView.setNavigationItemSelectedListener(this);
 
         FragmentComplaint complaintFragment = new FragmentComplaint();
@@ -194,6 +212,8 @@ public class MainActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_logout) {
             showDialog();
+        }else if(id == R.id.login){
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

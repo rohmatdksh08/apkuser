@@ -209,23 +209,6 @@ public class DetailKTPActivity extends AppCompatActivity {
             }
         });
 
-        apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
-                if(response.code() == 200) {
-                    imageSuka.setVisibility(View.GONE);
-                    tvStatusSuka.setText("Terima kasih telah menyukai ini");
-                } else {
-                    imageSuka.setVisibility(View.VISIBLE);
-                    tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-
-            }
-        });
 
         imageSuka.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -345,11 +328,31 @@ public class DetailKTPActivity extends AppCompatActivity {
 //            }
 //        });
 
-//        if (mAuth.getCurrentUser().getEmail().equals(emailDetailTextView.getText().toString())) {
-//            btnTambahKomentar.setVisibility(View.VISIBLE);
-//        } else {
-//            btnTambahKomentar.setVisibility(View.GONE);
-//        }
+        if (sharePref.getStatusLogin() == true) {
+            btnTambahKomentar.setVisibility(View.VISIBLE);
+            tvStatusSuka.setVisibility(View.VISIBLE);
+            apiService.checkStatusLike("Bearer "+sharePref.getTokenApi(), getKey).enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, retrofit2.Response<ResponseBody> response) {
+                    if(response.code() == 200) {
+                        imageSuka.setVisibility(View.GONE);
+                        tvStatusSuka.setText("Terima kasih telah menyukai ini");
+                    } else {
+                        imageSuka.setVisibility(View.VISIBLE);
+                        tvStatusSuka.setText("<~ Jadilah orang yang menyukai ini");
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
+        } else {
+            btnTambahKomentar.setVisibility(View.GONE);
+            imageSuka.setVisibility(View.GONE);
+            tvStatusSuka.setVisibility(View.GONE);
+        }
 
         relative1.setOnClickListener(new View.OnClickListener() {
             @Override
